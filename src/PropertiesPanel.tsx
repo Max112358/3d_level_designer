@@ -1,9 +1,12 @@
+import { useState } from "react";
+import { PanelRight } from "lucide-react";
 import { useEditorStore } from "./store";
 import { Direction } from "./types";
 
 const DIRECTIONS: Direction[] = ["north", "south", "east", "west"];
 
 export function PropertiesPanel() {
+  const [collapsed, setCollapsed] = useState(false);
   const selection = useEditorStore((s) => s.selection);
   const level = useEditorStore((s) => s.level);
   const updateSelectionProperties = useEditorStore((s) => s.updateSelectionProperties);
@@ -16,9 +19,19 @@ export function PropertiesPanel() {
 
   if (!selection) {
     return (
-      <div className="bg-slate-900/90 border border-slate-700 rounded-lg p-3 w-64 shadow-lg">
-        <h3 className="text-sm font-bold text-white mb-2">Properties</h3>
-        <p className="text-xs text-slate-400">Select a cell or object to edit properties.</p>
+      <div className="bg-slate-900/90 border border-slate-700 rounded-lg w-64 shadow-lg flex flex-col max-h-[50vh]">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center justify-between w-full px-3 py-2 text-left"
+        >
+          <h3 className="text-sm font-bold text-white">Properties</h3>
+          <PanelRight size={14} className={`text-slate-400 transition-transform ${collapsed ? "" : "rotate-180"}`} />
+        </button>
+        {!collapsed && (
+          <div className="px-3 pb-3 overflow-y-auto">
+            <p className="text-xs text-slate-400">Select a cell or object to edit properties.</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -124,9 +137,19 @@ export function PropertiesPanel() {
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-700 rounded-lg p-3 w-64 shadow-lg max-h-[60vh] overflow-y-auto">
-      <h3 className="text-sm font-bold text-white mb-2">Properties</h3>
-      {selection.kind === "cell" ? renderCell() : renderObject()}
+    <div className="bg-slate-900/90 border border-slate-700 rounded-lg w-64 shadow-lg flex flex-col max-h-[50vh]">
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center justify-between w-full px-3 py-2 text-left"
+      >
+        <h3 className="text-sm font-bold text-white">Properties</h3>
+        <PanelRight size={14} className={`text-slate-400 transition-transform ${collapsed ? "" : "rotate-180"}`} />
+      </button>
+      {!collapsed && (
+        <div className="px-3 pb-3 overflow-y-auto">
+          {selection.kind === "cell" ? renderCell() : renderObject()}
+        </div>
+      )}
     </div>
   );
 }

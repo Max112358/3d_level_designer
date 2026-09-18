@@ -4,15 +4,17 @@ import { fetchManifest } from "./assetManager";
 
 export function useManifest() {
   const [manifest, setManifest] = useState<Manifest | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchManifest()
       .then(setManifest)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
-  return { manifest, error };
+  return { manifest, loading, error };
 }
 
 export function useCatalog(manifest: Manifest | null) {

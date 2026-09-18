@@ -41,7 +41,7 @@ interface EditorState {
   historyIndex: number;
 }
 
-interface EditorActions {
+export interface EditorActions {
   setTool: (tool: Tool) => void;
   setActiveAssetId: (id: string | null) => void;
   setActiveFace: (face: "floor" | "ceiling" | Direction) => void;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { useEditorStore } from "./store";
+import { useEditorStore, EditorActions } from "./store";
 import {
   Direction,
   CELL_SIZE,
@@ -188,6 +188,28 @@ export function useSceneInteraction() {
         if (tool === "pointer") setSelection(null);
       }
 
+      if (tool === "eraser") {
+        const rect = gl.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+          ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
+        for (const hit of intersects) {
+          const kind = hit.object.userData.kind;
+          const index = hit.object.userData.index;
+          if (typeof kind === "string" && typeof index === "number") {
+            const remove = useEditorStore.getState()[`remove${kind.charAt(0).toUpperCase() + kind.slice(1)}` as keyof EditorActions] as (i: number) => void;
+            if (remove) {
+              remove(index);
+              return;
+            }
+          }
+        }
+      }
+
       if (!hover) return;
 
       if (tool === "paint") {
@@ -210,8 +232,8 @@ export function useSceneInteraction() {
         const [x, y, z] = parseCellKey(hover.key);
         const center = cellCenter(x, y, z);
         const pos: [number, number, number] = shiftRef.current
-          ? [hover.point.x, hover.point.y, hover.point.z]
-          : [center[0], center[1], center[2]];
+          ? [hover.point.x, hover.point.y + 1, hover.point.z]
+          : [center[0], center[1] + 1, center[2]];
         addProp({
           id: activeAssetId,
           type: entry?.type ?? "prop",
@@ -225,8 +247,8 @@ export function useSceneInteraction() {
         const [x, y, z] = parseCellKey(hover.key);
         const center = cellCenter(x, y, z);
         const pos: [number, number, number] = shiftRef.current
-          ? [hover.point.x, hover.point.y, hover.point.z]
-          : [center[0], center[1], center[2]];
+          ? [hover.point.x, hover.point.y + 1, hover.point.z]
+          : [center[0], center[1] + 1, center[2]];
         addEntity({
           id: activeAssetId,
           type: entry?.type ?? "spawn_point",
