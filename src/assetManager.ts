@@ -29,15 +29,14 @@ export function getMaterials(
 
   const baseColor = idToColor(id);
 
-  // Front material (with texture)
+  // Default front material to white so texture maps render untinted
   const frontMat = new THREE.MeshStandardMaterial({
-    color: baseColor,
+    color: texturePath ? 0xffffff : baseColor,
     roughness: 0.8,
     metalness: 0.1,
     side: THREE.FrontSide,
   });
 
-  // Back material (solid untextured fallback)
   const backMat = new THREE.MeshStandardMaterial({
     color: baseColor,
     roughness: 0.8,
@@ -54,7 +53,11 @@ export function getMaterials(
         frontMat.map = tex;
         frontMat.needsUpdate = true;
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fall back to tinted color if texture fails to load
+        frontMat.color.set(baseColor);
+        frontMat.needsUpdate = true;
+      });
   }
 
   const tuple: [THREE.Material, THREE.Material] = [frontMat, backMat];
