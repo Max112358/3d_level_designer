@@ -12,6 +12,49 @@ export type Tool =
 
 export type Direction = "north" | "south" | "east" | "west";
 
+export type SubPos =
+  | "north_west"
+  | "north"
+  | "north_east"
+  | "west"
+  | "center"
+  | "east"
+  | "south_west"
+  | "south"
+  | "south_east";
+
+export const SUB_POS_OPTIONS: SubPos[] = [
+  "north_west",
+  "north",
+  "north_east",
+  "west",
+  "center",
+  "east",
+  "south_west",
+  "south",
+  "south_east",
+];
+
+export interface PropData {
+  id: string;
+  type: string;
+  pos: [number, number, number];
+  cell?: [number, number, number];
+  subPos?: SubPos;
+  rotation?: [number, number, number];
+  scale?: [number, number, number];
+  properties?: Record<string, unknown>;
+}
+
+export interface ItemData {
+  id: string;
+  type: string;
+  pos: [number, number, number];
+  cell?: [number, number, number];
+  subPos?: SubPos;
+  properties?: Record<string, unknown>;
+}
+
 export interface CellFaceData {
   floor?: string;
   ceiling?: string;
@@ -22,15 +65,6 @@ export interface CellData {
   floor: string;
   ceiling: string;
   walls: Record<Direction, string>;
-}
-
-export interface PropData {
-  id: string;
-  type: string;
-  pos: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-  properties?: Record<string, unknown>;
 }
 
 export interface TriggerData {
@@ -67,13 +101,6 @@ export interface EntityData {
   type: string;
   pos: [number, number, number];
   rotation: [number, number, number];
-  properties?: Record<string, unknown>;
-}
-
-export interface ItemData {
-  id: string;
-  type: string;
-  pos: [number, number, number];
   properties?: Record<string, unknown>;
 }
 
@@ -114,15 +141,27 @@ export function parseCellKey(key: string): [number, number, number] {
   return [x, y, z];
 }
 
-export function cellCenter(x: number, y: number, z: number): [number, number, number] {
+export function cellCenter(
+  x: number,
+  y: number,
+  z: number,
+): [number, number, number] {
   return [(x + 0.5) * CELL_SIZE, y * CELL_SIZE, (z + 0.5) * CELL_SIZE];
 }
 
-export function cellMin(x: number, y: number, z: number): [number, number, number] {
+export function cellMin(
+  x: number,
+  y: number,
+  z: number,
+): [number, number, number] {
   return [x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE];
 }
 
-export function cellMax(x: number, y: number, z: number): [number, number, number] {
+export function cellMax(
+  x: number,
+  y: number,
+  z: number,
+): [number, number, number] {
   return [(x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE, (z + 1) * CELL_SIZE];
 }
 
