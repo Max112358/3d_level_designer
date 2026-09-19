@@ -61,9 +61,9 @@ export function LevelGeometry() {
           face: "floor",
           id: cell.floor,
           p1: new THREE.Vector3(min.x, min.y, min.z).add(shift),
-          p2: new THREE.Vector3(max.x, min.y, min.z).add(shift),
+          p2: new THREE.Vector3(min.x, min.y, max.z).add(shift),
           p3: new THREE.Vector3(max.x, min.y, max.z).add(shift),
-          p4: new THREE.Vector3(min.x, min.y, max.z).add(shift),
+          p4: new THREE.Vector3(max.x, min.y, min.z).add(shift),
           normal,
         });
       }
@@ -74,10 +74,10 @@ export function LevelGeometry() {
           key,
           face: "ceiling",
           id: cell.ceiling,
-          p1: new THREE.Vector3(min.x, max.y, max.z).add(shift),
-          p2: new THREE.Vector3(max.x, max.y, max.z).add(shift),
-          p3: new THREE.Vector3(max.x, max.y, min.z).add(shift),
-          p4: new THREE.Vector3(min.x, max.y, min.z).add(shift),
+          p1: new THREE.Vector3(min.x, max.y, min.z).add(shift),
+          p2: new THREE.Vector3(max.x, max.y, min.z).add(shift),
+          p3: new THREE.Vector3(max.x, max.y, max.z).add(shift),
+          p4: new THREE.Vector3(min.x, max.y, max.z).add(shift),
           normal,
         });
       }

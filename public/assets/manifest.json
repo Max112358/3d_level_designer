@@ -7,6 +7,12 @@
       "category": "floor"
     },
     {
+      "id": "stone_bricks",
+      "name": "Stone Bricks",
+      "path": "assets/textures/stone_bricks.png",
+      "category": "floor"
+    },
+    {
       "id": "dirt_floor",
       "name": "Dirt Floor",
       "path": "assets/textures/dirt_floor.png",
