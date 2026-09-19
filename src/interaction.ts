@@ -468,6 +468,33 @@ export function useSceneInteraction() {
           pos,
           properties: {},
         });
+      } else if (tool === "entity" && activeAssetId) {
+        const entry = getEntryById(activeAssetId);
+        const [x, y, z] = parseCellKey(hover.key);
+        const cell: [number, number, number] = [x, y, z];
+
+        const subPos: SubPos = worldPointToSubPos(
+          hover.point.x,
+          hover.point.z,
+          x,
+          z,
+        );
+
+        const heightOffset = shiftRef.current
+          ? hover.point.y - y * CELL_SIZE
+          : 0;
+
+        const pos = calculateWorldPos(cell, subPos, heightOffset);
+
+        addEntity({
+          id: activeAssetId,
+          type: entry?.type ?? "npc",
+          cell,
+          subPos,
+          pos,
+          rotation: [0, 0, 0],
+          properties: {},
+        });
       } else if (tool === "light") {
         const [x, y, z] = parseCellKey(hover.key);
         const center = cellCenter(x, y, z);

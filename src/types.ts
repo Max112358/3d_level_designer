@@ -100,6 +100,8 @@ export interface EntityData {
   id: string;
   type: string;
   pos: [number, number, number];
+  cell?: [number, number, number];
+  subPos?: SubPos;
   rotation: [number, number, number];
   properties?: Record<string, unknown>;
 }

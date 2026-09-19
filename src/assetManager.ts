@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Manifest, ManifestEntry } from "./types";
+import { Manifest, ManifestEntry, CELL_SIZE } from "./types";
 
 const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
@@ -99,13 +99,23 @@ export function createFallbackMesh(entry: ManifestEntry): THREE.Group {
   const group = new THREE.Group();
   group.name = entry.id;
   const color = idToColor(entry.id);
-  const geometry = new THREE.BoxGeometry(2, 2, 2);
+
+  // 1. Calculate side length (1/10th of a square/cell size)
+  const size = CELL_SIZE * 0.1; // e.g., if CELL_SIZE is 2, size = 0.2
+
+  // 2. Create cube geometry with the new size
+  const geometry = new THREE.BoxGeometry(size, size, size);
   const material = new THREE.MeshStandardMaterial({ color });
   const mesh = new THREE.Mesh(geometry, material);
+
+  // 3. Offset mesh Y by half its height so its base sits at Y = 0
+  mesh.position.y = size / 2;
+
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   group.add(mesh);
 
+  // 4. Adjust floating label sprite position to match smaller scale
   const labelCanvas = document.createElement("canvas");
   labelCanvas.width = 256;
   labelCanvas.height = 64;
@@ -119,8 +129,10 @@ export function createFallbackMesh(entry: ManifestEntry): THREE.Group {
   const tex = new THREE.CanvasTexture(labelCanvas);
   const spriteMat = new THREE.SpriteMaterial({ map: tex });
   const sprite = new THREE.Sprite(spriteMat);
-  sprite.position.y = 1.6;
-  sprite.scale.set(3, 0.75, 1);
+
+  // Position sprite slightly above the top of the scaled cube
+  sprite.position.y = size + 0.3;
+  sprite.scale.set(1.5, 0.375, 1);
   group.add(sprite);
 
   return group;

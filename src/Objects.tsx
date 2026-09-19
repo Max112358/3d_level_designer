@@ -135,7 +135,7 @@ export function Objects() {
     (t) => !isolateLayer || Math.floor(t.bounds.min[1] / CELL_SIZE) === layerY,
   );
 
-  // 2. Map through props and items to resolve world positions from subPos
+  // 2. Map through props, entities, and items to resolve world positions from subPos
   const resolvedProps = filteredProps.map((prop) => {
     if (prop.cell) {
       const computedPos = calculateWorldPos(
@@ -146,6 +146,18 @@ export function Objects() {
       return { ...prop, pos: computedPos };
     }
     return prop;
+  });
+
+  const resolvedEntities = filteredEntities.map((entity) => {
+    if (entity.cell) {
+      const computedPos = calculateWorldPos(
+        entity.cell,
+        entity.subPos ?? "center",
+        entity.pos[1] % CELL_SIZE,
+      );
+      return { ...entity, pos: computedPos };
+    }
+    return entity;
   });
 
   const resolvedItems = filteredItems.map((item) => {
@@ -160,11 +172,11 @@ export function Objects() {
     return item;
   });
 
-  // 3. Pass resolvedProps and resolvedItems to InstancedObjectGroup
+  // 3. Pass resolvedProps, resolvedEntities, and resolvedItems to InstancedObjectGroup
   return (
     <>
       <InstancedObjectGroup items={resolvedProps} kind="prop" />
-      <InstancedObjectGroup items={filteredEntities} kind="entity" />
+      <InstancedObjectGroup items={resolvedEntities} kind="entity" />
       <InstancedObjectGroup items={resolvedItems} kind="item" />
       {filteredLights.map((light, index) => (
         <group
