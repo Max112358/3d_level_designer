@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { PanelRight } from "lucide-react";
 import { useEditorStore } from "./store";
 import { Direction } from "./types";
 
 const DIRECTIONS: Direction[] = ["north", "south", "east", "west"];
 
 export function PropertiesPanel() {
-  const [collapsed, setCollapsed] = useState(false);
   const selection = useEditorStore((s) => s.selection);
   const level = useEditorStore((s) => s.level);
-  const updateSelectionProperties = useEditorStore((s) => s.updateSelectionProperties);
+  const updateSelectionProperties = useEditorStore(
+    (s) => s.updateSelectionProperties,
+  );
   const removeProp = useEditorStore((s) => s.removeProp);
   const removeEntity = useEditorStore((s) => s.removeEntity);
   const removeItem = useEditorStore((s) => s.removeItem);
@@ -19,19 +18,10 @@ export function PropertiesPanel() {
 
   if (!selection) {
     return (
-      <div className="bg-slate-900/90 border border-slate-700 rounded-lg w-64 shadow-lg flex flex-col max-h-[50vh]">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center justify-between w-full px-3 py-2 text-left"
-        >
-          <h3 className="text-sm font-bold text-white">Properties</h3>
-          <PanelRight size={14} className={`text-slate-400 transition-transform ${collapsed ? "" : "rotate-180"}`} />
-        </button>
-        {!collapsed && (
-          <div className="px-3 pb-3 overflow-y-auto">
-            <p className="text-xs text-slate-400">Select a cell or object to edit properties.</p>
-          </div>
-        )}
+      <div className="w-full h-full p-3 overflow-y-auto">
+        <p className="text-xs text-slate-400">
+          Select a cell or object to edit properties.
+        </p>
       </div>
     );
   }
@@ -48,7 +38,9 @@ export function PropertiesPanel() {
           <input
             type="text"
             value={cell.floor}
-            onChange={(e) => updateSelectionProperties({ floor: e.target.value })}
+            onChange={(e) =>
+              updateSelectionProperties({ floor: e.target.value })
+            }
             className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-xs"
           />
         </label>
@@ -57,7 +49,9 @@ export function PropertiesPanel() {
           <input
             type="text"
             value={cell.ceiling}
-            onChange={(e) => updateSelectionProperties({ ceiling: e.target.value })}
+            onChange={(e) =>
+              updateSelectionProperties({ ceiling: e.target.value })
+            }
             className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-xs"
           />
         </label>
@@ -67,7 +61,9 @@ export function PropertiesPanel() {
             <input
               type="text"
               value={cell.walls[dir]}
-              onChange={(e) => updateSelectionProperties({ [`wall_${dir}`]: e.target.value })}
+              onChange={(e) =>
+                updateSelectionProperties({ [`wall_${dir}`]: e.target.value })
+              }
               className="w-full mt-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-xs"
             />
           </label>
@@ -79,32 +75,45 @@ export function PropertiesPanel() {
   const renderObject = () => {
     let data: Record<string, unknown> | null = null;
     let onDelete: (() => void) | null = null;
+
     if (selection.kind === "prop") {
       data = level.props[selection.index] as unknown as Record<string, unknown>;
       onDelete = () => removeProp(selection.index);
     } else if (selection.kind === "entity") {
-      data = level.entities[selection.index] as unknown as Record<string, unknown>;
+      data = level.entities[selection.index] as unknown as Record<
+        string,
+        unknown
+      >;
       onDelete = () => removeEntity(selection.index);
     } else if (selection.kind === "item") {
       data = level.items[selection.index] as unknown as Record<string, unknown>;
       onDelete = () => removeItem(selection.index);
     } else if (selection.kind === "light") {
-      data = level.lights[selection.index] as unknown as Record<string, unknown>;
+      data = level.lights[selection.index] as unknown as Record<
+        string,
+        unknown
+      >;
       onDelete = () => removeLight(selection.index);
     } else if (selection.kind === "audio") {
       data = level.audio[selection.index] as unknown as Record<string, unknown>;
       onDelete = () => removeAudio(selection.index);
     } else if (selection.kind === "trigger") {
-      data = level.triggers[selection.index] as unknown as Record<string, unknown>;
+      data = level.triggers[selection.index] as unknown as Record<
+        string,
+        unknown
+      >;
       onDelete = () => removeTrigger(selection.index);
     }
+
     if (!data) return null;
 
     const properties = (data.properties ?? {}) as Record<string, unknown>;
 
     return (
       <div className="space-y-2">
-        <div className="text-xs text-slate-400 capitalize">{selection.kind}</div>
+        <div className="text-xs text-slate-400 capitalize">
+          {selection.kind}
+        </div>
         <pre className="text-[10px] text-slate-300 bg-slate-800 p-2 rounded overflow-auto max-h-40">
           {JSON.stringify(data, null, 2)}
         </pre>
@@ -137,19 +146,8 @@ export function PropertiesPanel() {
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-700 rounded-lg w-64 shadow-lg flex flex-col max-h-[50vh]">
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-between w-full px-3 py-2 text-left"
-      >
-        <h3 className="text-sm font-bold text-white">Properties</h3>
-        <PanelRight size={14} className={`text-slate-400 transition-transform ${collapsed ? "" : "rotate-180"}`} />
-      </button>
-      {!collapsed && (
-        <div className="px-3 pb-3 overflow-y-auto">
-          {selection.kind === "cell" ? renderCell() : renderObject()}
-        </div>
-      )}
+    <div className="w-full h-full p-3 overflow-y-auto">
+      {selection.kind === "cell" ? renderCell() : renderObject()}
     </div>
   );
 }
