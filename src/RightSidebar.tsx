@@ -1,11 +1,21 @@
-import { useState } from "react";
+// RightSidebar.tsx
+import { useState, useEffect } from "react";
 import { Catalog } from "./Catalog";
 import { PropertiesPanel } from "./PropertiesPanel";
+import { useEditorStore } from "./store"; // <-- Import store
 
 export function RightSidebar() {
   const [activeTab, setActiveTab] = useState<"catalog" | "properties">(
     "catalog",
   );
+  const selection = useEditorStore((s) => s.selection); // <-- Subscribe to selection
+
+  // Automatically switch tab when selection changes to an item
+  useEffect(() => {
+    if (selection) {
+      setActiveTab("properties");
+    }
+  }, [selection]);
 
   return (
     <div className="bg-slate-900/95 border border-slate-700 rounded-lg w-64 shadow-xl flex flex-col h-[calc(100vh-12rem)] max-h-[600px] overflow-hidden">
