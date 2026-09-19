@@ -110,7 +110,6 @@ export function useSceneInteraction() {
   const tool = useEditorStore((s) => s.tool);
   const setTool = useEditorStore((s) => s.setTool);
   const activeAssetId = useEditorStore((s) => s.activeAssetId);
-  const activeFace = useEditorStore((s) => s.activeFace);
   const layerY = useEditorStore((s) => s.layerY);
   const level = useEditorStore((s) => s.level);
   const setCellFace = useEditorStore((s) => s.setCellFace);
@@ -132,7 +131,6 @@ export function useSceneInteraction() {
   } | null>(null);
   const shiftRef = useRef(false);
 
-  // Refs for suppressing object placement when performing a click-and-drag camera orbit
   const isDraggingRef = useRef(false);
   const pointerDownPosRef = useRef({ x: 0, y: 0 });
 
@@ -154,7 +152,6 @@ export function useSceneInteraction() {
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      // Mark as drag if mouse moves more than 3 pixels from initial press location
       const dist = Math.hypot(
         e.clientX - pointerDownPosRef.current.x,
         e.clientY - pointerDownPosRef.current.y,
@@ -182,6 +179,7 @@ export function useSceneInteraction() {
         dist: number;
       } | null = null;
 
+      // 1. Check direct intersections with existing scene geometry
       Object.keys(level.cells).forEach((key) => {
         const [x, y, z] = parseCellKey(key);
         if (Math.abs(y - layerY) > 1) return;
@@ -209,6 +207,7 @@ export function useSceneInteraction() {
         });
       });
 
+      // 2. Empty-grid fallback using the active asset's manifest category
       if (
         !best &&
         (tool === "paint" ||
@@ -219,20 +218,73 @@ export function useSceneInteraction() {
           tool === "light" ||
           tool === "audio")
       ) {
-        const plane = new THREE.Plane(
-          new THREE.Vector3(0, 1, 0),
-          -layerY * CELL_SIZE,
-        );
-        const p = new THREE.Vector3();
-        if (raycaster.ray.intersectPlane(plane, p)) {
-          const fx = Math.floor(p.x / CELL_SIZE);
-          const fz = Math.floor(p.z / CELL_SIZE);
-          best = {
-            key: cellKey(fx, layerY, fz),
-            face: "floor",
-            point: p,
-            dist: p.distanceTo(camera.position),
-          };
+        const entry = activeAssetId ? getEntryById(activeAssetId) : null;
+        const category = entry?.category ?? "floor";
+
+        if (category === "ceiling") {
+          // Ceiling mode: plane at top of cell height (1 Y level above ground)
+          const plane = new THREE.Plane(
+            new THREE.Vector3(0, -1, 0),
+            (layerY + 1) * CELL_SIZE,
+          );
+          const p = new THREE.Vector3();
+          if (raycaster.ray.intersectPlane(plane, p)) {
+            const fx = Math.floor(p.x / CELL_SIZE);
+            const fz = Math.floor(p.z / CELL_SIZE);
+            best = {
+              key: cellKey(fx, layerY, fz),
+              face: "ceiling",
+              point: p,
+              dist: p.distanceTo(camera.position),
+            };
+          }
+        } else if (category === "wall") {
+          // Wall mode: raycast floor plane to get cell box, then choose closest wall edge
+          const plane = new THREE.Plane(
+            new THREE.Vector3(0, 1, 0),
+            -layerY * CELL_SIZE,
+          );
+          const p = new THREE.Vector3();
+          if (raycaster.ray.intersectPlane(plane, p)) {
+            const fx = Math.floor(p.x / CELL_SIZE);
+            const fz = Math.floor(p.z / CELL_SIZE);
+
+            // Compute offsets within the grid cell [-0.5, 0.5]
+            const localX = p.x / CELL_SIZE - fx - 0.5;
+            const localZ = p.z / CELL_SIZE - fz - 0.5;
+
+            // Pick the nearest edge (north, south, east, west)
+            let chosenFace: Direction = "north";
+            if (Math.abs(localX) > Math.abs(localZ)) {
+              chosenFace = localX > 0 ? "east" : "west";
+            } else {
+              chosenFace = localZ > 0 ? "south" : "north";
+            }
+
+            best = {
+              key: cellKey(fx, layerY, fz),
+              face: chosenFace,
+              point: p,
+              dist: p.distanceTo(camera.position),
+            };
+          }
+        } else {
+          // Default Floor mode
+          const plane = new THREE.Plane(
+            new THREE.Vector3(0, 1, 0),
+            -layerY * CELL_SIZE,
+          );
+          const p = new THREE.Vector3();
+          if (raycaster.ray.intersectPlane(plane, p)) {
+            const fx = Math.floor(p.x / CELL_SIZE);
+            const fz = Math.floor(p.z / CELL_SIZE);
+            best = {
+              key: cellKey(fx, layerY, fz),
+              face: "floor",
+              point: p,
+              dist: p.distanceTo(camera.position),
+            };
+          }
         }
       }
 
@@ -242,7 +294,6 @@ export function useSceneInteraction() {
     const onClick = (e: MouseEvent) => {
       if (e.button !== 0 || isDraggingRef.current) return;
 
-      // 1. Selection logic (only for pointer / eyedropper)
       if (tool === "pointer" || tool === "eyedropper") {
         const rect = gl.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
@@ -261,7 +312,6 @@ export function useSceneInteraction() {
             typeof userData.index === "number"
           ) {
             if (tool === "eyedropper") {
-              // Retrieve the object entry/item ID from store arrays
               const state = useEditorStore.getState();
               const kind = userData.kind as "prop" | "entity" | "item";
               const list =
@@ -276,7 +326,7 @@ export function useSceneInteraction() {
 
               if (item?.id) {
                 setActiveAssetId(item.id);
-                setTool(kind); // Switch active placement tool
+                setTool(kind);
                 return;
               }
             } else {
@@ -297,7 +347,6 @@ export function useSceneInteraction() {
         if (tool === "pointer") setSelection(null);
       }
 
-      // 2. Eraser logic for scene objects (props, entities, lights, audio, triggers, items)
       if (tool === "eraser") {
         const rect = gl.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
@@ -326,7 +375,6 @@ export function useSceneInteraction() {
 
       if (!hover) return;
 
-      // 3. Eraser logic for cell faces / tile textures
       if (tool === "paint") {
         if (activeAssetId) {
           setCellFace(hover.key, hover.face, activeAssetId);
@@ -345,7 +393,7 @@ export function useSceneInteraction() {
           if (id && id !== "none") {
             setActiveAssetId(id);
             setActiveFace(hover.face);
-            setTool("paint"); // Switch to paint tool upon sampling tile face
+            setTool("paint");
           }
         }
       } else if (tool === "prop" && activeAssetId) {
@@ -458,7 +506,6 @@ export function useSceneInteraction() {
     gl,
     tool,
     activeAssetId,
-    activeFace,
     layerY,
     level,
     hover,

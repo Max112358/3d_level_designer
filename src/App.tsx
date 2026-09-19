@@ -3,7 +3,6 @@ import { Toolbar } from "./Toolbar";
 import { RightSidebar } from "./RightSidebar";
 import { TopBar } from "./TopBar";
 import { LayerControls } from "./LayerControls";
-import { FaceSelector } from "./FaceSelector";
 import { LoadingScreen } from "./LoadingScreen";
 import { useManifest } from "./hooks";
 
@@ -21,9 +20,6 @@ export default function App() {
         <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end max-h-[calc(100vh-2rem)] pointer-events-none">
           <div className="pointer-events-auto">
             <LayerControls />
-          </div>
-          <div className="pointer-events-auto">
-            <FaceSelector />
           </div>
           <div className="pointer-events-auto">
             <RightSidebar />
