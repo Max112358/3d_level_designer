@@ -1,11 +1,11 @@
 // RightSidebar.tsx
 import { useState, useEffect } from "react";
 import { Catalog } from "./Catalog";
-import { PropertiesPanel } from "./PropertiesPanel";
+import { Inspector } from "./Inspector";
 import { useEditorStore } from "./store"; // <-- Import store
 
 export function RightSidebar() {
-  const [activeTab, setActiveTab] = useState<"catalog" | "properties">(
+  const [activeTab, setActiveTab] = useState<"catalog" | "inspector">(
     "catalog",
   );
   const selection = useEditorStore((s) => s.selection); // <-- Subscribe to selection
@@ -13,7 +13,7 @@ export function RightSidebar() {
   // Automatically switch tab when selection changes to an item
   useEffect(() => {
     if (selection) {
-      setActiveTab("properties");
+      setActiveTab("inspector");
     }
   }, [selection]);
 
@@ -32,14 +32,14 @@ export function RightSidebar() {
           Catalog
         </button>
         <button
-          onClick={() => setActiveTab("properties")}
+          onClick={() => setActiveTab("inspector")}
           className={`flex-1 py-2 text-xs font-bold transition-colors ${
-            activeTab === "properties"
+            activeTab === "inspector"
               ? "text-sky-400 border-b-2 border-sky-400 bg-slate-800"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
-          Properties
+          Inspector
         </button>
       </div>
 
@@ -51,9 +51,9 @@ export function RightSidebar() {
           <Catalog />
         </div>
         <div
-          className={`h-full w-full ${activeTab === "properties" ? "block" : "hidden"}`}
+          className={`h-full w-full ${activeTab === "inspector" ? "block" : "hidden"}`}
         >
-          <PropertiesPanel />
+          <Inspector />
         </div>
       </div>
     </div>

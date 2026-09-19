@@ -96,7 +96,7 @@ function InstancedObjectGroup({
         const g = groups[index];
         return (
           <group
-            key={`${kind}-${index}`}
+            key={`${kind}-${index}-${item.id}`} // <-- Added item.id here!
             position={item.pos}
             rotation={item.rotation ?? [0, 0, 0]}
             scale={item.scale ?? [1, 1, 1]}
