@@ -117,7 +117,7 @@ export function LevelGeometry() {
             p4 = new THREE.Vector3(min.x, min.y, min.z);
           }
 
-          const shift = normal.clone().multiplyScalar(OFFSET);
+          const shift = normal.clone().multiplyScalar(-OFFSET);
           out.push({
             key,
             face,
