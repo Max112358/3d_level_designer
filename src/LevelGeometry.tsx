@@ -6,6 +6,9 @@ import { getMaterial } from "./assetManager";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
 
+// Small visual displacement inward/outward along face normal to prevent z-fighting
+const OFFSET = 0.01;
+
 function faceVisible(
   cell: { floor: string; ceiling: string; walls: Record<Direction, string> },
   face: "floor" | "ceiling" | Direction,
@@ -51,77 +54,80 @@ export function LevelGeometry() {
       );
 
       if (faceVisible(cell, "floor")) {
+        const normal = new THREE.Vector3(0, 1, 0);
+        const shift = normal.clone().multiplyScalar(OFFSET);
         out.push({
           key,
           face: "floor",
           id: cell.floor,
-          p1: new THREE.Vector3(min.x, min.y, min.z),
-          p2: new THREE.Vector3(max.x, min.y, min.z),
-          p3: new THREE.Vector3(max.x, min.y, max.z),
-          p4: new THREE.Vector3(min.x, min.y, max.z),
-          normal: new THREE.Vector3(0, 1, 0),
+          p1: new THREE.Vector3(min.x, min.y, min.z).add(shift),
+          p2: new THREE.Vector3(max.x, min.y, min.z).add(shift),
+          p3: new THREE.Vector3(max.x, min.y, max.z).add(shift),
+          p4: new THREE.Vector3(min.x, min.y, max.z).add(shift),
+          normal,
         });
       }
       if (faceVisible(cell, "ceiling")) {
+        const normal = new THREE.Vector3(0, -1, 0);
+        const shift = normal.clone().multiplyScalar(OFFSET);
         out.push({
           key,
           face: "ceiling",
           id: cell.ceiling,
-          p1: new THREE.Vector3(min.x, max.y, max.z),
-          p2: new THREE.Vector3(max.x, max.y, max.z),
-          p3: new THREE.Vector3(max.x, max.y, min.z),
-          p4: new THREE.Vector3(min.x, max.y, min.z),
-          normal: new THREE.Vector3(0, -1, 0),
+          p1: new THREE.Vector3(min.x, max.y, max.z).add(shift),
+          p2: new THREE.Vector3(max.x, max.y, max.z).add(shift),
+          p3: new THREE.Vector3(max.x, max.y, min.z).add(shift),
+          p4: new THREE.Vector3(min.x, max.y, min.z).add(shift),
+          normal,
         });
       }
       FACES.forEach((face) => {
         if (faceVisible(cell, face)) {
           const id = cell.walls[face];
+          let normal: THREE.Vector3;
+          let p1: THREE.Vector3;
+          let p2: THREE.Vector3;
+          let p3: THREE.Vector3;
+          let p4: THREE.Vector3;
+
           if (face === "north") {
-            out.push({
-              key,
-              face,
-              id,
-              p1: new THREE.Vector3(max.x, max.y, min.z),
-              p2: new THREE.Vector3(min.x, max.y, min.z),
-              p3: new THREE.Vector3(min.x, min.y, min.z),
-              p4: new THREE.Vector3(max.x, min.y, min.z),
-              normal: new THREE.Vector3(0, 0, -1),
-            });
+            normal = new THREE.Vector3(0, 0, -1);
+            p1 = new THREE.Vector3(max.x, max.y, min.z);
+            p2 = new THREE.Vector3(min.x, max.y, min.z);
+            p3 = new THREE.Vector3(min.x, min.y, min.z);
+            p4 = new THREE.Vector3(max.x, min.y, min.z);
           } else if (face === "south") {
-            out.push({
-              key,
-              face,
-              id,
-              p1: new THREE.Vector3(min.x, max.y, max.z),
-              p2: new THREE.Vector3(max.x, max.y, max.z),
-              p3: new THREE.Vector3(max.x, min.y, max.z),
-              p4: new THREE.Vector3(min.x, min.y, max.z),
-              normal: new THREE.Vector3(0, 0, 1),
-            });
+            normal = new THREE.Vector3(0, 0, 1);
+            p1 = new THREE.Vector3(min.x, max.y, max.z);
+            p2 = new THREE.Vector3(max.x, max.y, max.z);
+            p3 = new THREE.Vector3(max.x, min.y, max.z);
+            p4 = new THREE.Vector3(min.x, min.y, max.z);
           } else if (face === "east") {
-            out.push({
-              key,
-              face,
-              id,
-              p1: new THREE.Vector3(max.x, max.y, max.z),
-              p2: new THREE.Vector3(max.x, max.y, min.z),
-              p3: new THREE.Vector3(max.x, min.y, min.z),
-              p4: new THREE.Vector3(max.x, min.y, max.z),
-              normal: new THREE.Vector3(1, 0, 0),
-            });
-          } else if (face === "west") {
-            out.push({
-              key,
-              face,
-              id,
-              p1: new THREE.Vector3(min.x, max.y, min.z),
-              p2: new THREE.Vector3(min.x, max.y, max.z),
-              p3: new THREE.Vector3(min.x, min.y, max.z),
-              p4: new THREE.Vector3(min.x, min.y, min.z),
-              normal: new THREE.Vector3(-1, 0, 0),
-            });
+            normal = new THREE.Vector3(1, 0, 0);
+            p1 = new THREE.Vector3(max.x, max.y, max.z);
+            p2 = new THREE.Vector3(max.x, max.y, min.z);
+            p3 = new THREE.Vector3(max.x, min.y, min.z);
+            p4 = new THREE.Vector3(max.x, min.y, max.z);
+          } else {
+            // west
+            normal = new THREE.Vector3(-1, 0, 0);
+            p1 = new THREE.Vector3(min.x, max.y, min.z);
+            p2 = new THREE.Vector3(min.x, max.y, max.z);
+            p3 = new THREE.Vector3(min.x, min.y, max.z);
+            p4 = new THREE.Vector3(min.x, min.y, min.z);
           }
+
+          const shift = normal.clone().multiplyScalar(OFFSET);
+          out.push({
+            key,
+            face,
+            id,
+            p1: p1.add(shift),
+            p2: p2.add(shift),
+            p3: p3.add(shift),
+            p4: p4.add(shift),
+            normal,
+          });
         }
       });
     });
