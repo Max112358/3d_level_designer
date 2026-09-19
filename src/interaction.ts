@@ -179,6 +179,10 @@ export function useSceneInteraction() {
         dist: number;
       } | null = null;
 
+      // Determine selected asset category
+      const entry = activeAssetId ? getEntryById(activeAssetId) : null;
+      const category = entry?.category ?? "floor";
+
       // 1. Check direct intersections with existing scene geometry
       Object.keys(level.cells).forEach((key) => {
         const [x, y, z] = parseCellKey(key);
@@ -190,6 +194,8 @@ export function useSceneInteraction() {
           ...FACES,
         ];
         faces.forEach((face) => {
+          // Skip checking floor intersections when attempting to place a ceiling tile
+          if (category === "ceiling" && face === "floor") return;
           const matId =
             face === "floor"
               ? cell.floor
