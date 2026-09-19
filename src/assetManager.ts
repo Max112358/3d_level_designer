@@ -6,7 +6,7 @@ const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
 const textureCache = new Map<string, THREE.Texture>();
 const modelCache = new Map<string, GLTF>();
-const materialCache = new Map<string, THREE.Material>();
+const materialCache = new Map<string, [THREE.Material, THREE.Material]>();
 const colorCache = new Map<string, THREE.Color>();
 
 export function idToColor(id: string): THREE.Color {
@@ -21,29 +21,45 @@ export function idToColor(id: string): THREE.Color {
   return colorCache.get(id)!;
 }
 
-export function getMaterial(id: string, texturePath?: string): THREE.Material {
+export function getMaterials(
+  id: string,
+  texturePath?: string,
+): [THREE.Material, THREE.Material] {
   if (materialCache.has(id)) return materialCache.get(id)!;
-  const mat = new THREE.MeshStandardMaterial({
-    color: idToColor(id),
+
+  const baseColor = idToColor(id);
+
+  // Front material (with texture)
+  const frontMat = new THREE.MeshStandardMaterial({
+    color: baseColor,
     roughness: 0.8,
     metalness: 0.1,
-    side: THREE.DoubleSide,
+    side: THREE.FrontSide,
   });
-  materialCache.set(id, mat);
+
+  // Back material (solid untextured fallback)
+  const backMat = new THREE.MeshStandardMaterial({
+    color: baseColor,
+    roughness: 0.8,
+    metalness: 0.1,
+    side: THREE.BackSide,
+  });
+
   if (texturePath) {
     loadTexture(texturePath)
       .then((tex) => {
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
         tex.repeat.set(1, 1);
-        (mat as THREE.MeshStandardMaterial).map = tex;
-        (mat as THREE.MeshStandardMaterial).needsUpdate = true;
+        frontMat.map = tex;
+        frontMat.needsUpdate = true;
       })
-      .catch(() => {
-        // keep fallback color
-      });
+      .catch(() => {});
   }
-  return mat;
+
+  const tuple: [THREE.Material, THREE.Material] = [frontMat, backMat];
+  materialCache.set(id, tuple);
+  return tuple;
 }
 
 export function loadTexture(path: string): Promise<THREE.Texture> {
@@ -56,7 +72,7 @@ export function loadTexture(path: string): Promise<THREE.Texture> {
         resolve(tex);
       },
       undefined,
-      (err) => reject(err)
+      (err) => reject(err),
     );
   });
 }
@@ -71,7 +87,7 @@ export function loadModel(path: string): Promise<GLTF> {
         resolve(gltf);
       },
       undefined,
-      (err) => reject(err)
+      (err) => reject(err),
     );
   });
 }
@@ -111,12 +127,17 @@ export function createLightHelper(color: string): THREE.Group {
   const group = new THREE.Group();
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(0.6, 16, 16),
-    new THREE.MeshBasicMaterial({ color })
+    new THREE.MeshBasicMaterial({ color }),
   );
   group.add(sphere);
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.8, 1, 32),
-    new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
+    new THREE.MeshBasicMaterial({
+      color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.5,
+    }),
   );
   ring.rotation.x = Math.PI / 2;
   group.add(ring);
@@ -127,13 +148,17 @@ export function createAudioHelper(): THREE.Group {
   const group = new THREE.Group();
   const cone = new THREE.Mesh(
     new THREE.ConeGeometry(0.5, 1, 16),
-    new THREE.MeshBasicMaterial({ color: "#f59e0b" })
+    new THREE.MeshBasicMaterial({ color: "#f59e0b" }),
   );
   cone.rotation.z = Math.PI;
   group.add(cone);
   const waves = new THREE.Mesh(
     new THREE.TorusGeometry(0.9, 0.05, 8, 32),
-    new THREE.MeshBasicMaterial({ color: "#f59e0b", transparent: true, opacity: 0.5 })
+    new THREE.MeshBasicMaterial({
+      color: "#f59e0b",
+      transparent: true,
+      opacity: 0.5,
+    }),
   );
   waves.rotation.x = Math.PI / 2;
   group.add(waves);
@@ -144,7 +169,12 @@ export function createTriggerHelper(): THREE.Group {
   const group = new THREE.Group();
   const box = new THREE.Mesh(
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: "#ef4444", wireframe: true, transparent: true, opacity: 0.6 })
+    new THREE.MeshBasicMaterial({
+      color: "#ef4444",
+      wireframe: true,
+      transparent: true,
+      opacity: 0.6,
+    }),
   );
   group.add(box);
   return group;

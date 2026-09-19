@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { useEditorStore } from "./store";
 import { CELL_SIZE, parseCellKey, Direction } from "./types";
-import { getMaterial, getEntryById } from "./assetManager";
+import { getMaterials, getEntryById } from "./assetManager";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
 
@@ -138,7 +138,7 @@ export function LevelGeometry() {
     <group>
       {quads.map((q) => {
         const entry = getEntryById(q.id); //
-        const material = getMaterial(q.id, entry?.path); //[cite: 5]
+        const materials = getMaterials(q.id, entry?.path);
         const geometry = new THREE.BufferGeometry();
         const positions = [
           q.p1.x,
@@ -180,13 +180,18 @@ export function LevelGeometry() {
         );
         geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
         geometry.setIndex([0, 1, 2, 0, 2, 3]);
+        // Group 0: Front face (index count: 6, material index: 0)
+        geometry.addGroup(0, 6, 0);
+        // Group 1: Back face (index count: 6, material index: 1)
+        geometry.addGroup(0, 6, 1);
+
         geometry.computeBoundingSphere();
         return (
           <mesh
             key={`${q.key}-${q.face}`}
             geometry={geometry}
-            material={material} //[cite: 2]
-            userData={{ kind: "cell", key: q.key, face: q.face }} //[cite: 2]
+            material={materials}
+            userData={{ kind: "cell", key: q.key, face: q.face }}
           />
         );
       })}
