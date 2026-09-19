@@ -186,6 +186,10 @@ export function useSceneInteraction() {
       // 1. Check direct intersections with existing scene geometry
       Object.keys(level.cells).forEach((key) => {
         const [x, y, z] = parseCellKey(key);
+
+        // Strict Y-level match for placing walls/floors to prevent cross-layer raycast hits
+        if (y !== layerY) return;
+
         if (Math.abs(y - layerY) > 1) return;
         const cell = level.cells[key];
         const faces: ("floor" | "ceiling" | Direction)[] = [

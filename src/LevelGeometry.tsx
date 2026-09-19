@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { useEditorStore } from "./store";
 import { CELL_SIZE, parseCellKey, Direction } from "./types";
-import { getMaterial } from "./assetManager";
+import { getMaterial, getEntryById } from "./assetManager";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
 
@@ -137,6 +137,8 @@ export function LevelGeometry() {
   return (
     <group>
       {quads.map((q) => {
+        const entry = getEntryById(q.id); //
+        const material = getMaterial(q.id, entry?.path); //[cite: 5]
         const geometry = new THREE.BufferGeometry();
         const positions = [
           q.p1.x,
@@ -166,7 +168,8 @@ export function LevelGeometry() {
           q.normal.y,
           q.normal.z,
         ];
-        const uvs = [0, 0, 1, 0, 1, 1, 0, 1];
+        //const uvs = [0, 0, 1, 0, 1, 1, 0, 1];
+        const uvs = [0, 1, 1, 1, 1, 0, 0, 0];
         geometry.setAttribute(
           "position",
           new THREE.Float32BufferAttribute(positions, 3),
@@ -182,8 +185,8 @@ export function LevelGeometry() {
           <mesh
             key={`${q.key}-${q.face}`}
             geometry={geometry}
-            material={getMaterial(q.id)}
-            userData={{ kind: "cell", key: q.key, face: q.face }}
+            material={material} //[cite: 2]
+            userData={{ kind: "cell", key: q.key, face: q.face }} //[cite: 2]
           />
         );
       })}

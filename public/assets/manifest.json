@@ -1,23 +1,100 @@
 {
   "textures": [
-    { "id": "stone_tiles", "name": "Stone Tiles", "path": "assets/textures/stone_tiles.png", "category": "floor" },
-    { "id": "stone_ceiling", "name": "Stone Ceiling", "path": "assets/textures/stone_ceiling.png", "category": "ceiling" },
-    { "id": "stone_wall", "name": "Stone Wall", "path": "assets/textures/stone_wall.png", "category": "wall" },
-    { "id": "stone_wall_torch", "name": "Stone Wall Torch", "path": "assets/textures/stone_wall_torch.png", "category": "wall" },
-    { "id": "iron_bars", "name": "Iron Bars", "path": "assets/textures/iron_bars.png", "category": "wall" },
-    { "id": "dirt_floor", "name": "Dirt Floor", "path": "assets/textures/dirt_floor.png", "category": "floor" },
-    { "id": "wood_planks", "name": "Wood Planks", "path": "assets/textures/wood_planks.png", "category": "floor" }
+    {
+      "id": "stone_tiles",
+      "name": "Stone Tiles",
+      "path": "assets/textures/stone_tiles.png",
+      "category": "floor"
+    },
+    {
+      "id": "dirt_floor",
+      "name": "Dirt Floor",
+      "path": "assets/textures/dirt_floor.png",
+      "category": "floor"
+    },
+    {
+      "id": "wood_planks",
+      "name": "Wood Planks",
+      "path": "assets/textures/wood_planks.png",
+      "category": "floor"
+    },
+    {
+      "id": "stone_ceiling",
+      "name": "Stone Ceiling",
+      "path": "assets/textures/stone_ceiling.png",
+      "category": "ceiling"
+    },
+    {
+      "id": "stone_wall",
+      "name": "Stone Wall",
+      "path": "assets/textures/stone_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "stone_wall_diamond",
+      "name": "Stone Wall Diamond",
+      "path": "assets/textures/stone_wall_diamond.png",
+      "category": "wall"
+    },
+    {
+      "id": "stone_wall_torch",
+      "name": "Stone Wall Torch",
+      "path": "assets/textures/stone_wall_torch.png",
+      "category": "wall"
+    },
+    {
+      "id": "iron_bars",
+      "name": "Iron Bars",
+      "path": "assets/textures/iron_bars.png",
+      "category": "wall"
+    }
   ],
   "props": [
-    { "id": "stone_fountain_01", "name": "Stone Fountain", "type": "fountain", "path": "assets/models/fountain.gltf", "category": "props" },
-    { "id": "barrel_01", "name": "Barrel", "type": "destructible_barrel", "path": "assets/models/barrel.gltf", "category": "props" },
-    { "id": "crate_01", "name": "Crate", "type": "crate", "path": "assets/models/crate.gltf", "category": "props" }
+    {
+      "id": "stone_fountain_01",
+      "name": "Stone Fountain",
+      "type": "fountain",
+      "path": "assets/models/fountain.gltf",
+      "category": "props"
+    },
+    {
+      "id": "barrel_01",
+      "name": "Barrel",
+      "type": "destructible_barrel",
+      "path": "assets/models/barrel.gltf",
+      "category": "props"
+    },
+    {
+      "id": "crate_01",
+      "name": "Crate",
+      "type": "crate",
+      "path": "assets/models/crate.gltf",
+      "category": "props"
+    }
   ],
   "entities": [
-    { "id": "player_spawn", "name": "Player Spawn", "type": "spawn_point", "path": "assets/models/spawn.gltf", "category": "entities" },
-    { "id": "enemy_spawn", "name": "Enemy Spawn", "type": "spawn_enemy", "path": "assets/models/enemy.gltf", "category": "entities" }
+    {
+      "id": "player_spawn",
+      "name": "Player Spawn",
+      "type": "spawn_point",
+      "path": "assets/models/spawn.gltf",
+      "category": "entities"
+    },
+    {
+      "id": "enemy_spawn",
+      "name": "Enemy Spawn",
+      "type": "spawn_enemy",
+      "path": "assets/models/enemy.gltf",
+      "category": "entities"
+    }
   ],
   "items": [
-    { "id": "health_potion_01", "name": "Health Potion", "type": "item_pickup", "path": "assets/models/potion.gltf", "category": "items" }
+    {
+      "id": "health_potion_01",
+      "name": "Health Potion",
+      "type": "item_pickup",
+      "path": "assets/models/potion.gltf",
+      "category": "items"
+    }
   ]
 }
