@@ -239,10 +239,10 @@ export function useSceneInteraction() {
     };
 
     const onClick = (e: MouseEvent) => {
-      // Require strictly standard left-click without active mouse dragging
       if (e.button !== 0 || isDraggingRef.current) return;
 
-      if (tool === "pointer" || tool === "eraser" || tool === "eyedropper") {
+      // 1. Selection logic (only for pointer / eyedropper)
+      if (tool === "pointer" || tool === "eyedropper") {
         const rect = gl.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
           ((e.clientX - rect.left) / rect.width) * 2 - 1,
@@ -253,36 +253,12 @@ export function useSceneInteraction() {
 
         const intersects = raycaster.intersectObjects(scene.children, true);
         for (const hit of intersects) {
-          const obj = hit.object;
-          const userData = obj.userData;
-          if (userData.kind === "prop" && typeof userData.index === "number") {
-            setSelection({ kind: "prop", index: userData.index });
-            return;
-          }
+          const userData = hit.object.userData;
           if (
-            userData.kind === "entity" &&
+            typeof userData.kind === "string" &&
             typeof userData.index === "number"
           ) {
-            setSelection({ kind: "entity", index: userData.index });
-            return;
-          }
-          if (userData.kind === "item" && typeof userData.index === "number") {
-            setSelection({ kind: "item", index: userData.index });
-            return;
-          }
-          if (userData.kind === "light" && typeof userData.index === "number") {
-            setSelection({ kind: "light", index: userData.index });
-            return;
-          }
-          if (userData.kind === "audio" && typeof userData.index === "number") {
-            setSelection({ kind: "audio", index: userData.index });
-            return;
-          }
-          if (
-            userData.kind === "trigger" &&
-            typeof userData.index === "number"
-          ) {
-            setSelection({ kind: "trigger", index: userData.index });
+            setSelection({ kind: userData.kind as any, index: userData.index });
             return;
           }
           if (userData.kind === "cell" && userData.key) {
@@ -293,6 +269,7 @@ export function useSceneInteraction() {
         if (tool === "pointer") setSelection(null);
       }
 
+      // 2. Eraser logic for scene objects (props, entities, lights, audio, triggers, items)
       if (tool === "eraser") {
         const rect = gl.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
@@ -301,13 +278,15 @@ export function useSceneInteraction() {
         );
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, camera);
+
         const intersects = raycaster.intersectObjects(scene.children, true);
         for (const hit of intersects) {
           const kind = hit.object.userData.kind;
           const index = hit.object.userData.index;
           if (typeof kind === "string" && typeof index === "number") {
+            const actionName = `remove${kind.charAt(0).toUpperCase() + kind.slice(1)}`;
             const remove = useEditorStore.getState()[
-              `remove${kind.charAt(0).toUpperCase() + kind.slice(1)}` as keyof EditorActions
+              actionName as keyof EditorActions
             ] as (i: number) => void;
             if (remove) {
               remove(index);
@@ -319,6 +298,7 @@ export function useSceneInteraction() {
 
       if (!hover) return;
 
+      // 3. Eraser logic for cell faces / tile textures
       if (tool === "paint") {
         if (activeAssetId) {
           setCellFace(hover.key, hover.face, activeAssetId);
