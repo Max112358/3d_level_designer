@@ -194,8 +194,12 @@ export function useSceneInteraction() {
           ...FACES,
         ];
         faces.forEach((face) => {
-          // Skip checking floor intersections when attempting to place a ceiling tile
-          if (category === "ceiling" && face === "floor") return;
+          // Skip checking faces that do not match the target asset category
+          if (category === "ceiling" && face !== "ceiling") return;
+          if (category === "floor" && face !== "floor") return;
+          if (category === "wall" && (face === "floor" || face === "ceiling"))
+            return;
+
           const matId =
             face === "floor"
               ? cell.floor
