@@ -19,39 +19,6 @@ function faceVisible(
   return id !== undefined && id !== "none";
 }
 
-function isOccluded(
-  levelCells: Record<
-    string,
-    { floor: string; ceiling: string; walls: Record<Direction, string> }
-  >,
-  x: number,
-  y: number,
-  z: number,
-  face: "floor" | "ceiling" | Direction,
-): boolean {
-  const neighborKey =
-    face === "floor"
-      ? `${x},${y - 1},${z}`
-      : face === "ceiling"
-        ? `${x},${y + 1},${z}`
-        : face === "north"
-          ? `${x},${y},${z - 1}`
-          : face === "south"
-            ? `${x},${y},${z + 1}`
-            : face === "east"
-              ? `${x + 1},${y},${z}`
-              : `${x - 1},${y},${z}`;
-
-  const neighbor = levelCells[neighborKey];
-  if (!neighbor) return false;
-
-  if (face === "floor") return neighbor.ceiling !== "none";
-  if (face === "ceiling") return neighbor.floor !== "none";
-
-  // Back-to-back walls should remain visible from their respective cell interiors
-  return false;
-}
-
 export function LevelGeometry() {
   const level = useEditorStore((s) => s.level);
   const layerY = useEditorStore((s) => s.layerY);
@@ -83,10 +50,7 @@ export function LevelGeometry() {
         (z + 1) * CELL_SIZE,
       );
 
-      if (
-        faceVisible(cell, "floor") &&
-        !isOccluded(level.cells, x, y, z, "floor")
-      ) {
+      if (faceVisible(cell, "floor")) {
         out.push({
           key,
           face: "floor",
@@ -98,10 +62,7 @@ export function LevelGeometry() {
           normal: new THREE.Vector3(0, 1, 0),
         });
       }
-      if (
-        faceVisible(cell, "ceiling") &&
-        !isOccluded(level.cells, x, y, z, "ceiling")
-      ) {
+      if (faceVisible(cell, "ceiling")) {
         out.push({
           key,
           face: "ceiling",
@@ -114,10 +75,7 @@ export function LevelGeometry() {
         });
       }
       FACES.forEach((face) => {
-        if (
-          faceVisible(cell, face) &&
-          !isOccluded(level.cells, x, y, z, face)
-        ) {
+        if (faceVisible(cell, face)) {
           const id = cell.walls[face];
           if (face === "north") {
             out.push({
