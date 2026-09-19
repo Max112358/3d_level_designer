@@ -108,6 +108,7 @@ function intersectFace(
 export function useSceneInteraction() {
   const { camera, scene, gl } = useThree();
   const tool = useEditorStore((s) => s.tool);
+  const setTool = useEditorStore((s) => s.setTool);
   const activeAssetId = useEditorStore((s) => s.activeAssetId);
   const activeFace = useEditorStore((s) => s.activeFace);
   const layerY = useEditorStore((s) => s.layerY);
@@ -254,18 +255,45 @@ export function useSceneInteraction() {
         const intersects = raycaster.intersectObjects(scene.children, true);
         for (const hit of intersects) {
           const userData = hit.object.userData;
+
           if (
             typeof userData.kind === "string" &&
             typeof userData.index === "number"
           ) {
-            setSelection({ kind: userData.kind as any, index: userData.index });
-            return;
+            if (tool === "eyedropper") {
+              // Retrieve the object entry/item ID from store arrays
+              const state = useEditorStore.getState();
+              const kind = userData.kind as "prop" | "entity" | "item";
+              const list =
+                state.level[
+                  kind === "prop"
+                    ? "props"
+                    : kind === "entity"
+                      ? "entities"
+                      : "items"
+                ];
+              const item = list?.[userData.index];
+
+              if (item?.id) {
+                setActiveAssetId(item.id);
+                setTool(kind); // Switch active placement tool
+                return;
+              }
+            } else {
+              setSelection({
+                kind: userData.kind as any,
+                index: userData.index,
+              });
+              return;
+            }
           }
-          if (userData.kind === "cell" && userData.key) {
+
+          if (userData.kind === "cell" && userData.key && tool === "pointer") {
             setSelection({ kind: "cell", key: userData.key });
             return;
           }
         }
+
         if (tool === "pointer") setSelection(null);
       }
 
@@ -317,6 +345,7 @@ export function useSceneInteraction() {
           if (id && id !== "none") {
             setActiveAssetId(id);
             setActiveFace(hover.face);
+            setTool("paint"); // Switch to paint tool upon sampling tile face
           }
         }
       } else if (tool === "prop" && activeAssetId) {
