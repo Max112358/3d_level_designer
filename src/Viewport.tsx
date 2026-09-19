@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three"; // <-- Add THREE import
 import { LevelGeometry } from "./LevelGeometry";
 import { Objects } from "./Objects";
 import { GridVisualizer } from "./GridVisualizer";
@@ -21,7 +22,17 @@ function Scene() {
     <>
       <ambientLight intensity={0.4} />
       <directionalLight position={[50, 80, 30]} intensity={0.8} castShadow />
-      <OrbitControls makeDefault enablePan enableZoom enableRotate />
+      <OrbitControls
+        makeDefault
+        enablePan
+        enableZoom
+        enableRotate
+        mouseButtons={{
+          LEFT: undefined,
+          MIDDLE: THREE.MOUSE.PAN,
+          RIGHT: THREE.MOUSE.ROTATE,
+        }}
+      />
       <GridVisualizer />
       <LevelGeometry />
       <Objects />
