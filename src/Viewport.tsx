@@ -43,8 +43,9 @@ function Scene({
       <OrbitControls
         makeDefault
         enablePan
-        enableZoom
+        enableZoom={false}
         enableRotate
+        enableDamping={false} // Prevents inertia/momentum when releasing right-click
         mouseButtons={{
           LEFT: undefined,
           MIDDLE: THREE.MOUSE.PAN,
