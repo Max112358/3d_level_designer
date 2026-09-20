@@ -67,10 +67,24 @@ function intersectFace(
   y: number,
   z: number,
 ): THREE.Vector3 | null {
+  const normal = getFaceNormal(face);
+
+  // 1. Calculate ray direction dot face normal.
+  // With original normals pointing outward from the cell box:
+  // A ray shot from INSIDE the cell towards the wall travels in the SAME direction as the normal (dot > 0).
+  // A ray shot from OUTSIDE behind the wall travels OPPOSITE to the normal (dot < 0).
+  const dot = raycaster.ray.direction.dot(normal);
+
+  // Reject rays hitting the wall from behind (outside the room looking in through a solid back-wall)
+  if (dot <= 0) {
+    return null;
+  }
+
   const plane = getFacePlane(face, x, y, z);
   const target = new THREE.Vector3();
   const hit = raycaster.ray.intersectPlane(plane, target);
   if (!hit) return null;
+
   const min = new THREE.Vector3(x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE);
   const max = new THREE.Vector3(
     (x + 1) * CELL_SIZE,
@@ -78,6 +92,7 @@ function intersectFace(
     (z + 1) * CELL_SIZE,
   );
   const eps = 0.001;
+
   if (face === "floor" || face === "ceiling") {
     if (
       target.x >= min.x - eps &&
@@ -103,6 +118,7 @@ function intersectFace(
     )
       return target;
   }
+
   return null;
 }
 
