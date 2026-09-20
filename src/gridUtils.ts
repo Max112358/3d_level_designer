@@ -1,6 +1,5 @@
-import { CELL_SIZE, Direction } from "./types";
-
-export type SurfaceFace = "floor" | "ceiling" | Direction;
+import * as THREE from "three";
+import { CELL_SIZE, Direction, SurfaceFace, CellData } from "./types";
 
 /**
  * Returns [offsetX, offsetZ] relative to cell center.
@@ -134,4 +133,128 @@ export function calculateSurfaceWorldPos(
   }
 
   return [finalX, finalY, finalZ];
+}
+
+/**
+ * Returns the normal vector pointing outward or inward for a given face.
+ */
+export function getFaceNormal(face: SurfaceFace): THREE.Vector3 {
+  switch (face) {
+    case "floor":
+      return new THREE.Vector3(0, 1, 0);
+    case "ceiling":
+      return new THREE.Vector3(0, -1, 0);
+    case "north":
+      return new THREE.Vector3(0, 0, -1);
+    case "south":
+      return new THREE.Vector3(0, 0, 1);
+    case "east":
+      return new THREE.Vector3(1, 0, 0);
+    case "west":
+      return new THREE.Vector3(-1, 0, 0);
+  }
+}
+
+/**
+ * Constructs a 3D plane corresponding to a specific cell face surface.
+ */
+export function getFacePlane(
+  face: SurfaceFace,
+  x: number,
+  y: number,
+  z: number,
+): THREE.Plane {
+  const normal = getFaceNormal(face);
+  const min = new THREE.Vector3(x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE);
+  const max = new THREE.Vector3(
+    (x + 1) * CELL_SIZE,
+    (y + 1) * CELL_SIZE,
+    (z + 1) * CELL_SIZE,
+  );
+
+  let point = new THREE.Vector3();
+  if (face === "floor")
+    point.set((min.x + max.x) / 2, min.y, (min.z + max.z) / 2);
+  else if (face === "ceiling")
+    point.set((min.x + max.x) / 2, max.y, (min.z + max.z) / 2);
+  else if (face === "north")
+    point.set((min.x + max.x) / 2, (min.y + max.y) / 2, min.z);
+  else if (face === "south")
+    point.set((min.x + max.x) / 2, (min.y + max.y) / 2, max.z);
+  else if (face === "east")
+    point.set(max.x, (min.y + max.y) / 2, (min.z + max.z) / 2);
+  else if (face === "west")
+    point.set(min.x, (min.y + max.y) / 2, (min.z + max.z) / 2);
+
+  return new THREE.Plane().setFromNormalAndCoplanarPoint(normal, point);
+}
+
+/**
+ * Raycasts against a cell face plane and bounds check the hit point within cell boundaries.
+ */
+export function intersectFace(
+  raycaster: THREE.Raycaster,
+  face: SurfaceFace,
+  x: number,
+  y: number,
+  z: number,
+): THREE.Vector3 | null {
+  const normal = getFaceNormal(face);
+  const dot = raycaster.ray.direction.dot(normal);
+
+  if (face === "floor" || face === "ceiling") {
+    if (dot >= 0) return null;
+  } else {
+    if (dot <= 0) return null;
+  }
+
+  const plane = getFacePlane(face, x, y, z);
+  const target = new THREE.Vector3();
+  const hit = raycaster.ray.intersectPlane(plane, target);
+  if (!hit) return null;
+
+  const min = new THREE.Vector3(x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE);
+  const max = new THREE.Vector3(
+    (x + 1) * CELL_SIZE,
+    (y + 1) * CELL_SIZE,
+    (z + 1) * CELL_SIZE,
+  );
+  const eps = 0.001;
+
+  if (face === "floor" || face === "ceiling") {
+    if (
+      target.x >= min.x - eps &&
+      target.x <= max.x + eps &&
+      target.z >= min.z - eps &&
+      target.z <= max.z + eps
+    )
+      return target;
+  } else if (face === "north" || face === "south") {
+    if (
+      target.x >= min.x - eps &&
+      target.x <= max.x + eps &&
+      target.y >= min.y - eps &&
+      target.y <= max.y + eps
+    )
+      return target;
+  } else {
+    if (
+      target.z >= min.z - eps &&
+      target.z <= max.z + eps &&
+      target.y >= min.y - eps &&
+      target.y <= max.y + eps
+    )
+      return target;
+  }
+
+  return null;
+}
+
+export function getCellFaceMaterial(
+  cell: CellData,
+  face: SurfaceFace,
+): string | undefined {
+  if (face === "floor") return cell.floor;
+  if (face === "ceiling") return cell.ceiling;
+  return cell.walls[face];
 }
