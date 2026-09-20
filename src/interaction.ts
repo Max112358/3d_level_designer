@@ -15,6 +15,7 @@ import {
   intersectFace,
   getCellFaceMaterial,
   resolveObjectPlacement,
+  getRotationForFace,
 } from "./gridUtils";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
@@ -296,6 +297,7 @@ export function useSceneInteraction() {
           activeAssetId,
         );
         const entry = getEntryById(activeAssetId);
+        const rotation = getRotationForFace(hover.face); // Compute orientation based on face
 
         if (tool === "prop") {
           addProp({
@@ -303,7 +305,7 @@ export function useSceneInteraction() {
             type: entry?.type ?? "prop",
             cell,
             pos: position,
-            rotation: [0, 0, 0],
+            rotation, // Use computed rotation
             scale: [1, 1, 1],
             properties: {},
           });
@@ -313,7 +315,7 @@ export function useSceneInteraction() {
             type: entry?.type ?? "prop",
             cell,
             pos: position,
-            rotation: [0, 0, 0],
+            rotation, // Use computed rotation
             scale: [1, 1, 1],
             properties: {},
           });
@@ -323,7 +325,7 @@ export function useSceneInteraction() {
             type: entry?.type ?? "prop",
             cell,
             pos: position,
-            rotation: [0, 0, 0],
+            rotation, // Use computed rotation
             scale: [1, 1, 1],
             properties: {},
           });

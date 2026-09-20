@@ -109,7 +109,7 @@ export function calculateSurfaceWorldPos(
   clickPoint: { x: number; y: number; z: number },
   face: SurfaceFace,
   objectHeight: number = 0,
-  objectThickness: number = CELL_SIZE * 0.05, // Half of the fallback box width by default
+  objectThickness: number = CELL_SIZE * 0.05,
 ): [number, number, number] {
   const [cx, cy, cz] = cell;
   const originX = cx * CELL_SIZE;
@@ -147,22 +147,36 @@ export function calculateSurfaceWorldPos(
   let finalY = originY + offY;
   let finalZ = originZ + offZ;
 
-  // Offset logic based on surface face orientation:
-  if (face === "ceiling") {
-    // Shift downward into the room
-    finalY -= objectHeight;
-  } else if (face === "north") {
-    // Wall at Z = 0; push into the cell (+Z direction)
-    finalZ += objectThickness;
-  } else if (face === "south") {
-    // Wall at Z = CELL_SIZE; push into the cell (-Z direction)
-    finalZ -= objectThickness;
-  } else if (face === "west") {
-    // Wall at X = 0; push into the cell (+X direction)
-    finalX += objectThickness;
-  } else if (face === "east") {
-    // Wall at X = CELL_SIZE; push into the cell (-X direction)
-    finalX -= objectThickness;
+  switch (face) {
+    case "floor":
+      // Thickness extends upward along +Y
+      finalY += objectThickness;
+      // Height extends backward/forward along Z; offset if pivot is at base
+      finalZ -= objectHeight * 0.5;
+      break;
+
+    case "ceiling":
+      // Thickness extends downward along -Y
+      finalY -= objectThickness;
+      // Height extends backward/forward along Z
+      finalZ -= objectHeight * 0.5;
+      break;
+
+    case "north":
+      finalZ += objectThickness;
+      break;
+
+    case "south":
+      finalZ -= objectThickness;
+      break;
+
+    case "west":
+      finalX += objectThickness;
+      break;
+
+    case "east":
+      finalX -= objectThickness;
+      break;
   }
 
   return [finalX, finalY, finalZ];
@@ -290,4 +304,35 @@ export function getCellFaceMaterial(
   if (face === "floor") return cell.floor;
   if (face === "ceiling") return cell.ceiling;
   return cell.walls[face];
+}
+
+/**
+ * Calculates Euler angles [x, y, z] in radians based on surface orientation.
+ * Assumes wall props default to facing out along +Z with their back against a North wall (-Z).
+ */
+export function getRotationForFace(
+  face: SurfaceFace,
+): [number, number, number] {
+  switch (face) {
+    case "north":
+      // Back flush against North wall, facing +Z
+      return [0, 0, 0];
+    case "south":
+      // Back flush against South wall, facing -Z
+      return [0, Math.PI, 0];
+    case "east":
+      // Back flush against East wall, facing -X
+      return [0, -Math.PI / 2, 0];
+    case "west":
+      // Back flush against West wall, facing +X
+      return [0, Math.PI / 2, 0];
+    case "ceiling":
+      // Pitch forward 90 degrees so the back face lies flat against the ceiling
+      return [Math.PI / 2, 0, 0];
+    case "floor":
+      // Pitch backward 90 degrees so the back face lies flat against the floor
+      return [-Math.PI / 2, 0, 0];
+    default:
+      return [0, 0, 0];
+  }
 }
