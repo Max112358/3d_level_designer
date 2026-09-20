@@ -10,7 +10,7 @@ import {
   cellCenter,
 } from "./types";
 import { getEntryById } from "./assetManager";
-import { calculateWorldPos, worldPointToSubPos } from "./gridUtils";
+import { calculateSurfaceWorldPos } from "./gridUtils";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
 
@@ -411,78 +411,55 @@ export function useSceneInteraction() {
             setTool("paint");
           }
         }
-      } else if (tool === "prop" && activeAssetId) {
+      } else if (
+        (tool === "prop" || tool === "item" || tool === "entity") &&
+        activeAssetId
+      ) {
         const entry = getEntryById(activeAssetId);
         const [x, y, z] = parseCellKey(hover.key);
         const cell: [number, number, number] = [x, y, z];
 
-        const heightOffset = shiftRef.current
-          ? hover.point.y - y * CELL_SIZE
-          : 0;
+        const objectHeight =
+          (entry as { height?: number })?.height ?? CELL_SIZE * 0.1;
+        const objectThickness =
+          (entry as { thickness?: number })?.thickness ?? CELL_SIZE * 0.05;
 
-        const pos = calculateWorldPos(
+        const pos = calculateSurfaceWorldPos(
           cell,
-          hover.point.x,
-          hover.point.z,
-          heightOffset,
+          hover.point,
+          hover.face,
+          objectHeight,
+          objectThickness,
         );
 
-        addProp({
-          id: activeAssetId,
-          type: entry?.type ?? "prop",
-          cell,
-          pos,
-          rotation: [0, 0, 0],
-          scale: [1, 1, 1],
-          properties: {},
-        });
-      } else if (tool === "item" && activeAssetId) {
-        const entry = getEntryById(activeAssetId);
-        const [x, y, z] = parseCellKey(hover.key);
-        const cell: [number, number, number] = [x, y, z];
-
-        const heightOffset = shiftRef.current
-          ? hover.point.y - y * CELL_SIZE
-          : 0;
-
-        const pos = calculateWorldPos(
-          cell,
-          hover.point.x,
-          hover.point.z,
-          heightOffset,
-        );
-
-        addItem({
-          id: activeAssetId,
-          type: entry?.type ?? "item_pickup",
-          cell,
-          pos,
-          properties: {},
-        });
-      } else if (tool === "entity" && activeAssetId) {
-        const entry = getEntryById(activeAssetId);
-        const [x, y, z] = parseCellKey(hover.key);
-        const cell: [number, number, number] = [x, y, z];
-
-        const heightOffset = shiftRef.current
-          ? hover.point.y - y * CELL_SIZE
-          : 0;
-
-        const pos = calculateWorldPos(
-          cell,
-          hover.point.x,
-          hover.point.z,
-          heightOffset,
-        );
-
-        addEntity({
-          id: activeAssetId,
-          type: entry?.type ?? "npc",
-          cell,
-          pos,
-          rotation: [0, 0, 0],
-          properties: {},
-        });
+        if (tool === "prop") {
+          addProp({
+            id: activeAssetId,
+            type: entry?.type ?? "prop",
+            cell,
+            pos,
+            rotation: [0, 0, 0],
+            scale: [1, 1, 1],
+            properties: {},
+          });
+        } else if (tool === "item") {
+          addItem({
+            id: activeAssetId,
+            type: entry?.type ?? "item_pickup",
+            cell,
+            pos,
+            properties: {},
+          });
+        } else if (tool === "entity") {
+          addEntity({
+            id: activeAssetId,
+            type: entry?.type ?? "npc",
+            cell,
+            pos,
+            rotation: [0, 0, 0],
+            properties: {},
+          });
+        }
       } else if (tool === "light") {
         const [x, y, z] = parseCellKey(hover.key);
         const center = cellCenter(x, y, z);

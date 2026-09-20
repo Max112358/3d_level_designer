@@ -76,6 +76,15 @@
       "type": "crate",
       "path": "assets/models/crate.gltf",
       "category": "props"
+    },
+    {
+      "id": "wall_torch_01",
+      "name": "Wall Torch",
+      "type": "wall_torch",
+      "path": "assets/models/wall_torch.gltf",
+      "category": "props",
+      "height": 0.4,
+      "thickness": 0.2
     }
   ],
   "entities": [

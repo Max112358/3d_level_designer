@@ -94,9 +94,11 @@ export interface LevelData {
 export interface ManifestEntry {
   id: string;
   name: string;
+  category: string;
   type?: string;
   path?: string;
-  category: string;
+  height?: number; // Vertical height of the bounding model
+  thickness?: number; // Depth offset from wall/pivot (distance to center)
 }
 
 export interface Manifest {
