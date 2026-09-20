@@ -1,5 +1,38 @@
 import * as THREE from "three";
-import { CELL_SIZE, Direction, SurfaceFace, CellData } from "./types";
+import { CELL_SIZE, SurfaceFace, CellData } from "./types";
+import { getEntryById } from "./assetManager";
+
+export interface ResolvedPlacement {
+  position: [number, number, number];
+  cell: [number, number, number];
+  scale: [number, number, number];
+}
+
+/**
+ * Resolves the final world position and scale for object placement or hover preview.
+ */
+export function resolveObjectPlacement(
+  cellKey: string,
+  point: THREE.Vector3,
+  face: SurfaceFace,
+  activeAssetId: string | null,
+): ResolvedPlacement {
+  const [x, y, z] = cellKey.split(",").map((n) => parseInt(n, 10));
+  const cell: [number, number, number] = [x, y, z];
+  const entry = activeAssetId ? getEntryById(activeAssetId) : null;
+
+  const position = calculateSurfaceWorldPos(
+    cell,
+    point,
+    face,
+    entry?.height,
+    entry?.thickness,
+  );
+
+  const scale: [number, number, number] = entry?.scale ?? [1, 1, 1];
+
+  return { position, cell, scale };
+}
 
 /**
  * Returns [offsetX, offsetZ] relative to cell center.

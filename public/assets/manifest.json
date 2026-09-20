@@ -84,7 +84,8 @@
       "path": "assets/models/wall_torch.gltf",
       "category": "props",
       "height": 0.4,
-      "thickness": 0.2
+      "thickness": 0.2,
+      "scale": [1, 1, 1]
     }
   ],
   "entities": [

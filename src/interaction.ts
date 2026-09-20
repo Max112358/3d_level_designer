@@ -9,13 +9,12 @@ import {
   parseCellKey,
   cellCenter,
   SurfaceFace,
-  CellData,
 } from "./types";
 import { getEntryById } from "./assetManager";
 import {
-  calculateSurfaceWorldPos,
   intersectFace,
   getCellFaceMaterial,
+  resolveObjectPlacement,
 } from "./gridUtils";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
@@ -290,24 +289,20 @@ export function useSceneInteraction() {
         (tool === "prop" || tool === "item" || tool === "entity") &&
         activeAssetId
       ) {
-        const entry = getEntryById(activeAssetId);
-        const [x, y, z] = parseCellKey(hover.key);
-        const cell: [number, number, number] = [x, y, z];
-
-        const pos = calculateSurfaceWorldPos(
-          cell,
+        const { position, cell } = resolveObjectPlacement(
+          hover.key,
           hover.point,
           hover.face,
-          entry?.height,
-          entry?.thickness,
+          activeAssetId,
         );
+        const entry = getEntryById(activeAssetId);
 
         if (tool === "prop") {
           addProp({
             id: activeAssetId,
             type: entry?.type ?? "prop",
             cell,
-            pos,
+            pos: position,
             rotation: [0, 0, 0],
             scale: [1, 1, 1],
             properties: {},
@@ -315,18 +310,21 @@ export function useSceneInteraction() {
         } else if (tool === "item") {
           addItem({
             id: activeAssetId,
-            type: entry?.type ?? "item_pickup",
+            type: entry?.type ?? "prop",
             cell,
-            pos,
+            pos: position,
+            rotation: [0, 0, 0],
+            scale: [1, 1, 1],
             properties: {},
           });
         } else if (tool === "entity") {
           addEntity({
             id: activeAssetId,
-            type: entry?.type ?? "npc",
+            type: entry?.type ?? "prop",
             cell,
-            pos,
+            pos: position,
             rotation: [0, 0, 0],
+            scale: [1, 1, 1],
             properties: {},
           });
         }

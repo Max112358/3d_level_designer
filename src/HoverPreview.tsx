@@ -1,6 +1,9 @@
+// HoverPreview.tsx
 import { useSceneInteraction } from "./interaction";
 import { useEditorStore } from "./store";
 import { CELL_SIZE, parseCellKey } from "./types";
+import { resolveObjectPlacement } from "./gridUtils";
+import { AssetModel } from "./AssetModel";
 
 export function HoverPreview() {
   const hover = useSceneInteraction();
@@ -9,9 +12,45 @@ export function HoverPreview() {
 
   if (!hover) return null;
 
+  const isObjectTool =
+    tool === "prop" ||
+    tool === "entity" ||
+    tool === "item" ||
+    tool === "light" ||
+    tool === "audio" ||
+    tool === "trigger";
+
+  if (isObjectTool) {
+    const { position, scale } = resolveObjectPlacement(
+      hover.key,
+      hover.point,
+      hover.face,
+      activeAssetId,
+    );
+
+    return (
+      <group position={position} scale={scale}>
+        {activeAssetId ? (
+          <AssetModel assetId={activeAssetId} opacity={0.5} />
+        ) : (
+          <mesh>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshBasicMaterial
+              color="#facc15"
+              transparent
+              opacity={0.35}
+              depthTest={false}
+            />
+          </mesh>
+        )}
+      </group>
+    );
+  }
+
+  // Fallback for cell/face tile painting highlights
   const [x, y, z] = parseCellKey(hover.key);
-  const min = [x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE] as [number, number, number];
-  const max = [(x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE, (z + 1) * CELL_SIZE] as [number, number, number];
+  const min = [x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE];
+  const max = [(x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE, (z + 1) * CELL_SIZE];
 
   let position: [number, number, number] = [0, 0, 0];
   let scale: [number, number, number] = [CELL_SIZE, CELL_SIZE, CELL_SIZE];
@@ -36,17 +75,15 @@ export function HoverPreview() {
     scale = [0.1, CELL_SIZE, CELL_SIZE];
   }
 
-  const isObjectTool = tool === "prop" || tool === "entity" || tool === "item" || tool === "light" || tool === "audio" || tool === "trigger";
-
-  if (isObjectTool) {
-    position = [hover.point.x, hover.point.y, hover.point.z];
-    scale = [1, 1, 1];
-  }
-
   return (
     <mesh position={position} scale={scale}>
       <boxGeometry />
-      <meshBasicMaterial color={activeAssetId ? "#38bdf8" : "#facc15"} transparent opacity={0.35} depthTest={false} />
+      <meshBasicMaterial
+        color="#facc15"
+        transparent
+        opacity={0.35}
+        depthTest={false}
+      />
     </mesh>
   );
 }

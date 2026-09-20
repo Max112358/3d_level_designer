@@ -12,6 +12,8 @@ export type Tool =
 
 export type Direction = "north" | "south" | "east" | "west";
 
+export type SurfaceFace = "floor" | "ceiling" | Direction;
+
 export interface PropData {
   id: string;
   type: string;
@@ -27,6 +29,18 @@ export interface ItemData {
   type: string;
   pos: [number, number, number];
   cell?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: [number, number, number];
+  properties?: Record<string, unknown>;
+}
+
+export interface EntityData {
+  id: string;
+  type: string;
+  pos: [number, number, number];
+  cell?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: [number, number, number];
   properties?: Record<string, unknown>;
 }
 
@@ -71,15 +85,6 @@ export interface AudioData {
   properties?: Record<string, unknown>;
 }
 
-export interface EntityData {
-  id: string;
-  type: string;
-  pos: [number, number, number];
-  cell?: [number, number, number];
-  rotation: [number, number, number];
-  properties?: Record<string, unknown>;
-}
-
 export interface LevelData {
   version: number;
   cells: Record<string, CellData>;
@@ -97,8 +102,9 @@ export interface ManifestEntry {
   category: string;
   type?: string;
   path?: string;
-  height?: number; // Vertical height of the bounding model
-  thickness?: number; // Depth offset from wall/pivot (distance to center)
+  height?: number; // Vertical offset for ceiling attachment
+  thickness?: number; // Wall-normal offset for wall attachment
+  scale?: [number, number, number]; // Default mesh transformation scale
 }
 
 export interface Manifest {
