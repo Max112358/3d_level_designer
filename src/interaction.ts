@@ -8,7 +8,6 @@ import {
   cellKey,
   parseCellKey,
   cellCenter,
-  SubPos,
 } from "./types";
 import { getEntryById } from "./assetManager";
 import { calculateWorldPos, worldPointToSubPos } from "./gridUtils";
@@ -413,58 +412,50 @@ export function useSceneInteraction() {
           }
         }
       } else if (tool === "prop" && activeAssetId) {
-        const entry = getEntryById(activeAssetId); //[cite: 3]
-        const [x, y, z] = parseCellKey(hover.key); //[cite: 3]
-        const cell: [number, number, number] = [x, y, z]; //[cite: 3]
-
-        // Dynamically compute subPos from hover click coordinates
-        const subPos: SubPos = worldPointToSubPos(
-          hover.point.x,
-          hover.point.z,
-          x,
-          z,
-        );
+        const entry = getEntryById(activeAssetId);
+        const [x, y, z] = parseCellKey(hover.key);
+        const cell: [number, number, number] = [x, y, z];
 
         const heightOffset = shiftRef.current
           ? hover.point.y - y * CELL_SIZE
           : 0;
 
-        const pos = calculateWorldPos(cell, subPos, heightOffset);
+        const pos = calculateWorldPos(
+          cell,
+          hover.point.x,
+          hover.point.z,
+          heightOffset,
+        );
 
         addProp({
           id: activeAssetId,
           type: entry?.type ?? "prop",
           cell,
-          subPos,
           pos,
           rotation: [0, 0, 0],
           scale: [1, 1, 1],
           properties: {},
         });
       } else if (tool === "item" && activeAssetId) {
-        const entry = getEntryById(activeAssetId); //[cite: 3]
-        const [x, y, z] = parseCellKey(hover.key); //[cite: 3]
-        const cell: [number, number, number] = [x, y, z]; //[cite: 3]
-
-        // Dynamically compute subPos from hover click coordinates
-        const subPos: SubPos = worldPointToSubPos(
-          hover.point.x,
-          hover.point.z,
-          x,
-          z,
-        );
+        const entry = getEntryById(activeAssetId);
+        const [x, y, z] = parseCellKey(hover.key);
+        const cell: [number, number, number] = [x, y, z];
 
         const heightOffset = shiftRef.current
           ? hover.point.y - y * CELL_SIZE
           : 0;
 
-        const pos = calculateWorldPos(cell, subPos, heightOffset);
+        const pos = calculateWorldPos(
+          cell,
+          hover.point.x,
+          hover.point.z,
+          heightOffset,
+        );
 
         addItem({
           id: activeAssetId,
           type: entry?.type ?? "item_pickup",
           cell,
-          subPos,
           pos,
           properties: {},
         });
@@ -473,24 +464,21 @@ export function useSceneInteraction() {
         const [x, y, z] = parseCellKey(hover.key);
         const cell: [number, number, number] = [x, y, z];
 
-        const subPos: SubPos = worldPointToSubPos(
-          hover.point.x,
-          hover.point.z,
-          x,
-          z,
-        );
-
         const heightOffset = shiftRef.current
           ? hover.point.y - y * CELL_SIZE
           : 0;
 
-        const pos = calculateWorldPos(cell, subPos, heightOffset);
+        const pos = calculateWorldPos(
+          cell,
+          hover.point.x,
+          hover.point.z,
+          heightOffset,
+        );
 
         addEntity({
           id: activeAssetId,
           type: entry?.type ?? "npc",
           cell,
-          subPos,
           pos,
           rotation: [0, 0, 0],
           properties: {},

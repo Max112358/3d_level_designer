@@ -12,35 +12,11 @@ export type Tool =
 
 export type Direction = "north" | "south" | "east" | "west";
 
-export type SubPos =
-  | "north_west"
-  | "north"
-  | "north_east"
-  | "west"
-  | "center"
-  | "east"
-  | "south_west"
-  | "south"
-  | "south_east";
-
-export const SUB_POS_OPTIONS: SubPos[] = [
-  "north_west",
-  "north",
-  "north_east",
-  "west",
-  "center",
-  "east",
-  "south_west",
-  "south",
-  "south_east",
-];
-
 export interface PropData {
   id: string;
   type: string;
   pos: [number, number, number];
   cell?: [number, number, number];
-  subPos?: SubPos;
   rotation?: [number, number, number];
   scale?: [number, number, number];
   properties?: Record<string, unknown>;
@@ -51,7 +27,6 @@ export interface ItemData {
   type: string;
   pos: [number, number, number];
   cell?: [number, number, number];
-  subPos?: SubPos;
   properties?: Record<string, unknown>;
 }
 
@@ -101,7 +76,6 @@ export interface EntityData {
   type: string;
   pos: [number, number, number];
   cell?: [number, number, number];
-  subPos?: SubPos;
   rotation: [number, number, number];
   properties?: Record<string, unknown>;
 }

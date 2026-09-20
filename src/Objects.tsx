@@ -10,7 +10,6 @@ import {
   createTriggerHelper,
   getEntryById,
 } from "./assetManager";
-import { calculateWorldPos } from "./gridUtils";
 
 function InstancedObjectGroup({
   items,
@@ -115,7 +114,6 @@ export function Objects() {
   const layerY = useEditorStore((s) => s.layerY);
   const isolateLayer = useEditorStore((s) => s.isolateLayer);
 
-  // Filter items by active layer
   const filteredProps = level.props.filter(
     (p) => !isolateLayer || Math.floor(p.pos[1] / CELL_SIZE) === layerY,
   );
@@ -135,49 +133,11 @@ export function Objects() {
     (t) => !isolateLayer || Math.floor(t.bounds.min[1] / CELL_SIZE) === layerY,
   );
 
-  // 2. Map through props, entities, and items to resolve world positions from subPos
-  const resolvedProps = filteredProps.map((prop) => {
-    if (prop.cell) {
-      const computedPos = calculateWorldPos(
-        prop.cell,
-        prop.subPos ?? "center",
-        prop.pos[1] % CELL_SIZE,
-      );
-      return { ...prop, pos: computedPos };
-    }
-    return prop;
-  });
-
-  const resolvedEntities = filteredEntities.map((entity) => {
-    if (entity.cell) {
-      const computedPos = calculateWorldPos(
-        entity.cell,
-        entity.subPos ?? "center",
-        entity.pos[1] % CELL_SIZE,
-      );
-      return { ...entity, pos: computedPos };
-    }
-    return entity;
-  });
-
-  const resolvedItems = filteredItems.map((item) => {
-    if (item.cell) {
-      const computedPos = calculateWorldPos(
-        item.cell,
-        item.subPos ?? "center",
-        item.pos[1] % CELL_SIZE,
-      );
-      return { ...item, pos: computedPos };
-    }
-    return item;
-  });
-
-  // 3. Pass resolvedProps, resolvedEntities, and resolvedItems to InstancedObjectGroup
   return (
     <>
-      <InstancedObjectGroup items={resolvedProps} kind="prop" />
-      <InstancedObjectGroup items={resolvedEntities} kind="entity" />
-      <InstancedObjectGroup items={resolvedItems} kind="item" />
+      <InstancedObjectGroup items={filteredProps} kind="prop" />
+      <InstancedObjectGroup items={filteredEntities} kind="entity" />
+      <InstancedObjectGroup items={filteredItems} kind="item" />
       {filteredLights.map((light, index) => (
         <group
           key={`light-${index}`}

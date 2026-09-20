@@ -1,10 +1,10 @@
-import { CELL_SIZE, SubPos } from "./types";
+import { CELL_SIZE } from "./types";
 
 /**
  * Returns [offsetX, offsetZ] relative to cell center.
  * Divides the cell into a 3x3 sub-grid.
  */
-export function getSubPosOffset(subPos: SubPos = "center"): [number, number] {
+export function getSubPosOffset(subPos: string = "center"): [number, number] {
   const step = CELL_SIZE / 3;
   switch (subPos) {
     case "north_west":
@@ -31,12 +31,13 @@ export function getSubPosOffset(subPos: SubPos = "center"): [number, number] {
 }
 
 /**
- * Computes world space [X, Y, Z] from cell grid index [x, y, z],
- * a subPos designation, and an optional vertical offset inside the cell.
+ * Computes snapped world space [X, Y, Z] from cell grid index,
+ * hover click coordinates, and vertical height offset.
  */
 export function calculateWorldPos(
   cell: [number, number, number],
-  subPos: SubPos = "center",
+  clickX: number,
+  clickZ: number,
   heightOffset: number = 0,
 ): [number, number, number] {
   const [cx, cy, cz] = cell;
@@ -44,6 +45,7 @@ export function calculateWorldPos(
   const centerY = cy * CELL_SIZE + heightOffset;
   const centerZ = (cz + 0.5) * CELL_SIZE;
 
+  const subPos = worldPointToSubPos(clickX, clickZ, cx, cz);
   const [offsetX, offsetZ] = getSubPosOffset(subPos);
 
   return [centerX + offsetX, centerY, centerZ + offsetZ];
@@ -51,23 +53,20 @@ export function calculateWorldPos(
 
 /**
  * Given a world point (X, Z) and a cell index [cx, cz],
- * calculates which sub-position (NW, N, NE, etc.) the point falls into.
+ * calculates which sub-position quadrant the point falls into.
  */
 export function worldPointToSubPos(
   worldX: number,
   worldZ: number,
   cellX: number,
   cellZ: number,
-): SubPos {
-  // Center of the target grid cell in world coordinates
+): string {
   const centerX = (cellX + 0.5) * CELL_SIZE;
   const centerZ = (cellZ + 0.5) * CELL_SIZE;
 
-  // Local offset from cell center: ranges approximately [-CELL_SIZE/2, CELL_SIZE/2]
   const localX = worldX - centerX;
   const localZ = worldZ - centerZ;
 
-  // Divide the cell into 3 equal columns and rows along X and Z
   const threshold = CELL_SIZE / 6;
 
   let xCol: "west" | "center" | "east" = "center";
