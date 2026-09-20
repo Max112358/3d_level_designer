@@ -199,13 +199,61 @@ export function createTriggerHelper(): THREE.Group {
   return group;
 }
 
-let manifest: Manifest | null = null;
+// 1. Auto-discover all models, meta files, and textures in subfolders
+const modelFiles = import.meta.glob<string>("/src/assets/**/*.glb", {
+  query: "?url",
+  import: "default",
+  eager: true,
+});
 
+const metaFiles = import.meta.glob<Partial<ManifestEntry>>(
+  "/src/assets/**/*.meta.json",
+  { import: "default", eager: true },
+);
+
+// Scan recursively through subfolders (floor, wall, ceiling)
+const textureFiles = import.meta.glob<string>("/src/assets/textures/**/*.png", {
+  query: "?url",
+  import: "default",
+  eager: true,
+});
+
+// 2. Helper to parse path, assign category based on parent folder, and merge metadata
+function parseFilePath(path: string): ManifestEntry {
+  const parts = path.split("/");
+  const fileName = parts.pop() || "";
+  const category = parts.pop() || "props"; // "floor", "wall", "ceiling", "props", "entities", "items"
+
+  const id = fileName.replace(/\.[^/.]+$/, ""); // "stone_wall"
+  const name = id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); // "Stone Wall"
+
+  const metaPath = path.replace(/\.glb$/, ".meta.json");
+  const metaData = metaFiles[metaPath] || {};
+
+  const resolvedPath = modelFiles[path] || textureFiles[path] || path;
+
+  return {
+    id,
+    name,
+    category,
+    path: resolvedPath,
+    ...metaData,
+  };
+}
+
+// 3. Build the manifest automatically from folder categories
+const allTextures = Object.keys(textureFiles).map((p) => parseFilePath(p));
+const allModels = Object.keys(modelFiles).map((p) => parseFilePath(p));
+
+let manifest: Manifest = {
+  textures: allTextures, // Contains all textures categorized as floor, wall, or ceiling
+  props: allModels.filter((m) => m.category === "props"),
+  entities: allModels.filter((m) => m.category === "entities"),
+  items: allModels.filter((m) => m.category === "items"),
+};
+
+// 4. Return the synchronously built manifest (or keep fetchManifest as an async function returning it)
 export async function fetchManifest(): Promise<Manifest> {
-  if (manifest) return manifest;
-  const res = await fetch("./assets/manifest.json");
-  if (!res.ok) throw new Error("Failed to load manifest");
-  manifest = (await res.json()) as Manifest;
   return manifest;
 }
 
