@@ -427,7 +427,7 @@ export function useSceneInteraction() {
 
         const heightOffset = shiftRef.current
           ? hover.point.y - y * CELL_SIZE
-          : 1;
+          : 0;
 
         const pos = calculateWorldPos(cell, subPos, heightOffset);
 
@@ -456,7 +456,7 @@ export function useSceneInteraction() {
 
         const heightOffset = shiftRef.current
           ? hover.point.y - y * CELL_SIZE
-          : 0.8;
+          : 0;
 
         const pos = calculateWorldPos(cell, subPos, heightOffset);
 

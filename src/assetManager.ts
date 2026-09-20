@@ -86,6 +86,10 @@ export function loadModel(path: string): Promise<GLTF> {
     gltfLoader.load(
       path,
       (gltf) => {
+        // Compute model bounds and align the lowest Y-point to 0
+        const bbox = new THREE.Box3().setFromObject(gltf.scene);
+        gltf.scene.position.y = -bbox.min.y;
+
         modelCache.set(path, gltf);
         resolve(gltf);
       },
