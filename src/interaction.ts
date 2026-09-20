@@ -297,7 +297,7 @@ export function useSceneInteraction() {
           activeAssetId,
         );
         const entry = getEntryById(activeAssetId);
-        const rotation = getRotationForFace(hover.face); // Compute orientation based on face
+        const rotation = getRotationForFace(hover.face, entry?.mountType);
 
         if (tool === "prop") {
           addProp({

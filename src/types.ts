@@ -14,6 +14,8 @@ export type Direction = "north" | "south" | "east" | "west";
 
 export type SurfaceFace = "floor" | "ceiling" | Direction;
 
+export type MountType = "floor" | "wall" | "ceiling";
+
 export interface PropData {
   id: string;
   type: string;
@@ -102,6 +104,7 @@ export interface ManifestEntry {
   category: string;
   type?: string;
   path?: string;
+  mountType?: MountType;
   height?: number; // Vertical offset for ceiling attachment
   thickness?: number; // Wall-normal offset for wall attachment
   scale?: [number, number, number]; // Default mesh transformation scale

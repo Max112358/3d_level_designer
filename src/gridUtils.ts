@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CELL_SIZE, SurfaceFace, CellData } from "./types";
+import { CELL_SIZE, SurfaceFace, CellData, MountType } from "./types";
 import { getEntryById } from "./assetManager";
 
 export interface ResolvedPlacement {
@@ -27,6 +27,7 @@ export function resolveObjectPlacement(
     face,
     entry?.height,
     entry?.thickness,
+    (entry as any)?.mountType ?? "wall", // Fallback to "wall" if omitted
   );
 
   const scale: [number, number, number] = entry?.scale ?? [1, 1, 1];
@@ -101,8 +102,8 @@ function getFaceSubOffset(
 }
 
 /**
- * Quantizes world coordinates to one of 9 discrete points on the designated cell face surface.
- * Offsets objects so they sit flush against walls and ceilings without clipping.
+ * Quantizes world coordinates to one of 9 discrete points on a cell surface,
+ * applying appropriate height/thickness offsets based on mount type and face orientation.
  */
 export function calculateSurfaceWorldPos(
   cell: [number, number, number],
@@ -110,12 +111,14 @@ export function calculateSurfaceWorldPos(
   face: SurfaceFace,
   objectHeight: number = 0,
   objectThickness: number = CELL_SIZE * 0.05,
+  mountType: MountType = "wall",
 ): [number, number, number] {
   const [cx, cy, cz] = cell;
   const originX = cx * CELL_SIZE;
   const originY = cy * CELL_SIZE;
   const originZ = cz * CELL_SIZE;
 
+  // Clamp hit point within the cell boundary
   const localX = Math.min(Math.max(clickPoint.x - originX, 0), CELL_SIZE);
   const localY = Math.min(Math.max(clickPoint.y - originY, 0), CELL_SIZE);
   const localZ = Math.min(Math.max(clickPoint.z - originZ, 0), CELL_SIZE);
@@ -130,6 +133,7 @@ export function calculateSurfaceWorldPos(
   let col = 0;
   let row = 0;
 
+  // Determine sub-grid (col, row) relative to face surface plane
   if (face === "floor" || face === "ceiling") {
     col = getSubIndex(localX);
     row = getSubIndex(localZ);
@@ -147,36 +151,60 @@ export function calculateSurfaceWorldPos(
   let finalY = originY + offY;
   let finalZ = originZ + offZ;
 
-  switch (face) {
-    case "floor":
-      // Thickness extends upward along +Y
-      finalY += objectThickness;
-      // Height extends backward/forward along Z; offset if pivot is at base
-      finalZ -= objectHeight * 0.5;
-      break;
+  if (mountType === "floor") {
+    // Standing floor items (potions, chests, characters)
+    switch (face) {
+      case "floor":
+        // Pivot sits naturally at Y = 0 on floor
+        break;
+      case "ceiling":
+        // Hang downward from ceiling plane
+        finalY -= objectHeight;
+        break;
+      case "north":
+        finalZ += objectHeight * 0.5;
+        break;
+      case "south":
+        finalZ -= objectHeight * 0.5;
+        break;
+      case "west":
+        finalX += objectHeight * 0.5;
+        break;
+      case "east":
+        finalX -= objectHeight * 0.5;
+        break;
+    }
+  } else {
+    // Wall items (sconces, panels, wall signs)
+    switch (face) {
+      case "ceiling":
+        // Local thickness becomes vertical depth extending down from ceiling
+        finalY -= objectThickness;
+        finalZ -= objectHeight * 0.5;
+        break;
 
-    case "ceiling":
-      // Thickness extends downward along -Y
-      finalY -= objectThickness;
-      // Height extends backward/forward along Z
-      finalZ -= objectHeight * 0.5;
-      break;
+      case "floor":
+        // Local thickness becomes vertical height extending up from floor
+        finalY += objectThickness;
+        finalZ -= objectHeight * 0.5;
+        break;
 
-    case "north":
-      finalZ += objectThickness;
-      break;
+      case "north":
+        finalZ += objectThickness;
+        break;
 
-    case "south":
-      finalZ -= objectThickness;
-      break;
+      case "south":
+        finalZ -= objectThickness;
+        break;
 
-    case "west":
-      finalX += objectThickness;
-      break;
+      case "west":
+        finalX += objectThickness;
+        break;
 
-    case "east":
-      finalX -= objectThickness;
-      break;
+      case "east":
+        finalX -= objectThickness;
+        break;
+    }
   }
 
   return [finalX, finalY, finalZ];
@@ -312,27 +340,45 @@ export function getCellFaceMaterial(
  */
 export function getRotationForFace(
   face: SurfaceFace,
+  mountType: MountType = "wall",
 ): [number, number, number] {
+  // 1. Standalone Floor/Ground Items (Potions, Crates, Characters)
+  if (mountType === "floor") {
+    switch (face) {
+      case "ceiling":
+        // Hang upside down from ceiling
+        return [Math.PI, 0, 0];
+      case "north":
+        // Base rests against North wall; local +Y points into the cell (+Z)
+        return [Math.PI / 2, 0, 0];
+      case "south":
+        // Base rests against South wall; local +Y points into the cell (-Z)
+        return [-Math.PI / 2, 0, 0];
+      case "east":
+        return [0, 0, Math.PI / 2];
+      case "west":
+        return [0, 0, -Math.PI / 2];
+      case "floor":
+      default:
+        // Stands naturally upright on floor
+        return [0, 0, 0];
+    }
+  }
+
+  // 2. Default Wall Props (Sconces, Switches, Wall Signs)
   switch (face) {
     case "north":
-      // Back flush against North wall, facing +Z
       return [0, 0, 0];
     case "south":
-      // Back flush against South wall, facing -Z
       return [0, Math.PI, 0];
     case "east":
-      // Back flush against East wall, facing -X
       return [0, -Math.PI / 2, 0];
     case "west":
-      // Back flush against West wall, facing +X
       return [0, Math.PI / 2, 0];
     case "ceiling":
-      // Pitch forward 90 degrees so the back face lies flat against the ceiling
       return [Math.PI / 2, 0, 0];
     case "floor":
-      // Pitch backward 90 degrees so the back face lies flat against the floor
-      return [-Math.PI / 2, 0, 0];
     default:
-      return [0, 0, 0];
+      return [-Math.PI / 2, 0, 0];
   }
 }
