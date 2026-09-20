@@ -60,31 +60,31 @@
       "id": "stone_fountain_01",
       "name": "Stone Fountain",
       "type": "fountain",
-      "path": "assets/models/fountain.gltf",
+      "path": "assets/models/fountain.glb",
       "category": "props"
     },
     {
       "id": "barrel_01",
       "name": "Barrel",
       "type": "destructible_barrel",
-      "path": "assets/models/barrel.gltf",
+      "path": "assets/models/barrel.glb",
       "category": "props"
     },
     {
       "id": "crate_01",
       "name": "Crate",
       "type": "crate",
-      "path": "assets/models/crate.gltf",
+      "path": "assets/models/crate.glb",
       "category": "props"
     },
     {
       "id": "wall_torch_01",
       "name": "Wall Torch",
       "type": "wall_torch",
-      "path": "assets/models/wall_torch.gltf",
+      "path": "assets/models/wall_torch.glb",
       "category": "props",
       "height": 0.4,
-      "thickness": 0.2,
+      "thickness": 0.3,
       "scale": [1, 1, 1]
     }
   ],
@@ -93,14 +93,14 @@
       "id": "player_spawn",
       "name": "Player Spawn",
       "type": "spawn_point",
-      "path": "assets/models/spawn.gltf",
+      "path": "assets/models/spawn.glb",
       "category": "entities"
     },
     {
       "id": "enemy_spawn",
       "name": "Enemy Spawn",
       "type": "spawn_enemy",
-      "path": "assets/models/enemy.gltf",
+      "path": "assets/models/enemy.glb",
       "category": "entities"
     }
   ],
@@ -109,7 +109,7 @@
       "id": "health_potion_01",
       "name": "Health Potion",
       "type": "item_pickup",
-      "path": "assets/models/potion.gltf",
+      "path": "assets/models/potion.glb",
       "category": "items"
     }
   ]
