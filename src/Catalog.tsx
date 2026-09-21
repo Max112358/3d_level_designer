@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, ChevronDown, Image, Box, User, Package } from "lucide-react";
+import { ChevronRight, ChevronDown, Image, Box, User, Package, PanelRight } from "lucide-react";
 import { useEditorStore } from "./store";
 import { useManifest, useCatalog } from "./hooks";
 import { ManifestEntry } from "./types";
@@ -60,13 +60,22 @@ export function Catalog() {
   const activeAssetId = useEditorStore((s) => s.activeAssetId);
   const setActiveAssetId = useEditorStore((s) => s.setActiveAssetId);
   const tool = useEditorStore((s) => s.tool);
+  const [collapsed, setCollapsed] = useState(false);
 
   if (error) return <div className="p-4 text-red-400 text-sm">{error}</div>;
   if (!manifest) return <div className="p-4 text-slate-400 text-sm">Loading catalog...</div>;
 
   return (
-    <div className="bg-slate-900/90 border border-slate-700 rounded-lg p-3 w-64 max-h-[60vh] overflow-y-auto shadow-lg">
-      <h3 className="text-sm font-bold text-white mb-2">Catalog</h3>
+    <div className="bg-slate-900/90 border border-slate-700 rounded-lg w-64 shadow-lg flex flex-col max-h-[50vh]">
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center justify-between w-full px-3 py-2 text-left"
+      >
+        <h3 className="text-sm font-bold text-white">Catalog</h3>
+        <PanelRight size={14} className={`text-slate-400 transition-transform ${collapsed ? "" : "rotate-180"}`} />
+      </button>
+      {!collapsed && (
+        <div className="px-3 pb-3 overflow-y-auto">
       <CatalogSection
         title="Textures"
         icon={Image}
@@ -107,6 +116,8 @@ export function Catalog() {
           useEditorStore.getState().setTool("item");
         }}
       />
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import { useEditorStore } from "./store";
 import { CELL_SIZE, parseCellKey, Direction } from "./types";
+import { getMaterial } from "./assetManager";
 
 const FACES: Direction[] = ["north", "south", "east", "west"];
 
@@ -36,23 +37,17 @@ export function LevelGeometry() {
   const layerY = useEditorStore((s) => s.layerY);
   const isolateLayer = useEditorStore((s) => s.isolateLayer);
 
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    const positions: number[] = [];
-    const normals: number[] = [];
-    const uvs: number[] = [];
-    const colors: number[] = [];
-    const indices: number[] = [];
-    let indexOffset = 0;
-
-    const addQuad = (p1: THREE.Vector3, p2: THREE.Vector3, p3: THREE.Vector3, p4: THREE.Vector3, normal: THREE.Vector3, color: THREE.Color) => {
-      positions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z, p4.x, p4.y, p4.z);
-      normals.push(normal.x, normal.y, normal.z, normal.x, normal.y, normal.z, normal.x, normal.y, normal.z, normal.x, normal.y, normal.z);
-      uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
-      colors.push(color.r, color.g, color.b, color.r, color.g, color.b, color.r, color.g, color.b, color.r, color.g, color.b);
-      indices.push(indexOffset, indexOffset + 1, indexOffset + 2, indexOffset, indexOffset + 2, indexOffset + 3);
-      indexOffset += 4;
-    };
+  const quads = useMemo(() => {
+    const out: {
+      key: string;
+      face: "floor" | "ceiling" | Direction;
+      id: string;
+      p1: THREE.Vector3;
+      p2: THREE.Vector3;
+      p3: THREE.Vector3;
+      p4: THREE.Vector3;
+      normal: THREE.Vector3;
+    }[] = [];
 
     Object.entries(level.cells).forEach(([key, cell]) => {
       const [x, y, z] = parseCellKey(key);
@@ -61,83 +56,99 @@ export function LevelGeometry() {
       const max = new THREE.Vector3((x + 1) * CELL_SIZE, (y + 1) * CELL_SIZE, (z + 1) * CELL_SIZE);
 
       if (faceVisible(cell, "floor") && !isOccluded(level.cells, x, y, z, "floor")) {
-        const c = new THREE.Color().setHex(0x888888);
-        addQuad(
-          new THREE.Vector3(min.x, min.y, min.z),
-          new THREE.Vector3(max.x, min.y, min.z),
-          new THREE.Vector3(max.x, min.y, max.z),
-          new THREE.Vector3(min.x, min.y, max.z),
-          new THREE.Vector3(0, 1, 0),
-          c
-        );
+        out.push({
+          key,
+          face: "floor",
+          id: cell.floor,
+          p1: new THREE.Vector3(min.x, min.y, min.z),
+          p2: new THREE.Vector3(max.x, min.y, min.z),
+          p3: new THREE.Vector3(max.x, min.y, max.z),
+          p4: new THREE.Vector3(min.x, min.y, max.z),
+          normal: new THREE.Vector3(0, 1, 0),
+        });
       }
       if (faceVisible(cell, "ceiling") && !isOccluded(level.cells, x, y, z, "ceiling")) {
-        const c = new THREE.Color().setHex(0xaaaaaa);
-        addQuad(
-          new THREE.Vector3(min.x, max.y, max.z),
-          new THREE.Vector3(max.x, max.y, max.z),
-          new THREE.Vector3(max.x, max.y, min.z),
-          new THREE.Vector3(min.x, max.y, min.z),
-          new THREE.Vector3(0, -1, 0),
-          c
-        );
+        out.push({
+          key,
+          face: "ceiling",
+          id: cell.ceiling,
+          p1: new THREE.Vector3(min.x, max.y, max.z),
+          p2: new THREE.Vector3(max.x, max.y, max.z),
+          p3: new THREE.Vector3(max.x, max.y, min.z),
+          p4: new THREE.Vector3(min.x, max.y, min.z),
+          normal: new THREE.Vector3(0, -1, 0),
+        });
       }
       FACES.forEach((face) => {
         if (faceVisible(cell, face) && !isOccluded(level.cells, x, y, z, face)) {
-          const c = new THREE.Color().setHex(0x999999);
+          const id = cell.walls[face];
           if (face === "north") {
-            addQuad(
-              new THREE.Vector3(max.x, max.y, min.z),
-              new THREE.Vector3(min.x, max.y, min.z),
-              new THREE.Vector3(min.x, min.y, min.z),
-              new THREE.Vector3(max.x, min.y, min.z),
-              new THREE.Vector3(0, 0, -1),
-              c
-            );
+            out.push({
+              key,
+              face,
+              id,
+              p1: new THREE.Vector3(max.x, max.y, min.z),
+              p2: new THREE.Vector3(min.x, max.y, min.z),
+              p3: new THREE.Vector3(min.x, min.y, min.z),
+              p4: new THREE.Vector3(max.x, min.y, min.z),
+              normal: new THREE.Vector3(0, 0, -1),
+            });
           } else if (face === "south") {
-            addQuad(
-              new THREE.Vector3(min.x, max.y, max.z),
-              new THREE.Vector3(max.x, max.y, max.z),
-              new THREE.Vector3(max.x, min.y, max.z),
-              new THREE.Vector3(min.x, min.y, max.z),
-              new THREE.Vector3(0, 0, 1),
-              c
-            );
+            out.push({
+              key,
+              face,
+              id,
+              p1: new THREE.Vector3(min.x, max.y, max.z),
+              p2: new THREE.Vector3(max.x, max.y, max.z),
+              p3: new THREE.Vector3(max.x, min.y, max.z),
+              p4: new THREE.Vector3(min.x, min.y, max.z),
+              normal: new THREE.Vector3(0, 0, 1),
+            });
           } else if (face === "east") {
-            addQuad(
-              new THREE.Vector3(max.x, max.y, max.z),
-              new THREE.Vector3(max.x, max.y, min.z),
-              new THREE.Vector3(max.x, min.y, min.z),
-              new THREE.Vector3(max.x, min.y, max.z),
-              new THREE.Vector3(1, 0, 0),
-              c
-            );
+            out.push({
+              key,
+              face,
+              id,
+              p1: new THREE.Vector3(max.x, max.y, max.z),
+              p2: new THREE.Vector3(max.x, max.y, min.z),
+              p3: new THREE.Vector3(max.x, min.y, min.z),
+              p4: new THREE.Vector3(max.x, min.y, max.z),
+              normal: new THREE.Vector3(1, 0, 0),
+            });
           } else if (face === "west") {
-            addQuad(
-              new THREE.Vector3(min.x, max.y, min.z),
-              new THREE.Vector3(min.x, max.y, max.z),
-              new THREE.Vector3(min.x, min.y, max.z),
-              new THREE.Vector3(min.x, min.y, min.z),
-              new THREE.Vector3(-1, 0, 0),
-              c
-            );
+            out.push({
+              key,
+              face,
+              id,
+              p1: new THREE.Vector3(min.x, max.y, min.z),
+              p2: new THREE.Vector3(min.x, max.y, max.z),
+              p3: new THREE.Vector3(min.x, min.y, max.z),
+              p4: new THREE.Vector3(min.x, min.y, min.z),
+              normal: new THREE.Vector3(-1, 0, 0),
+            });
           }
         }
       });
     });
-
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-    geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-    geo.setIndex(indices);
-    geo.computeBoundingSphere();
-    return geo;
+    return out;
   }, [level.cells, layerY, isolateLayer]);
 
   return (
-    <mesh geometry={geometry} userData={{ kind: "level" }}>
-      <meshStandardMaterial vertexColors side={THREE.DoubleSide} />
-    </mesh>
+    <group>
+      {quads.map((q) => {
+        const geometry = new THREE.BufferGeometry();
+        const positions = [q.p1.x, q.p1.y, q.p1.z, q.p2.x, q.p2.y, q.p2.z, q.p3.x, q.p3.y, q.p3.z, q.p4.x, q.p4.y, q.p4.z];
+        const normals = [q.normal.x, q.normal.y, q.normal.z, q.normal.x, q.normal.y, q.normal.z, q.normal.x, q.normal.y, q.normal.z, q.normal.x, q.normal.y, q.normal.z];
+        const uvs = [0, 0, 1, 0, 1, 1, 0, 1];
+        geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setIndex([0, 1, 2, 0, 2, 3]);
+        geometry.computeBoundingSphere();
+        return (
+          <mesh key={`${q.key}-${q.face}`} geometry={geometry} material={getMaterial(q.id)} userData={{ kind: "cell", key: q.key, face: q.face }} />
+        );
+      })}
+    </group>
   );
 }

@@ -11,7 +11,7 @@ export function LayerControls() {
     <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-700 rounded-lg px-3 py-2 shadow-lg">
       <span className="text-xs text-slate-300">Layer Y</span>
       <button
-        onClick={() => setLayerY(Math.max(0, layerY - 1))}
+        onClick={() => setLayerY(layerY - 1)}
         className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-white"
       >
         <Minus size={14} />
