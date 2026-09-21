@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronRight,
   ChevronDown,
@@ -6,7 +6,6 @@ import {
   Box,
   User,
   Package,
-  PanelRight,
 } from "lucide-react";
 import { useEditorStore } from "./store";
 import { useManifest, useCatalog } from "./hooks";
@@ -68,7 +67,22 @@ export function Catalog() {
   const activeAssetId = useEditorStore((s) => s.activeAssetId);
   const setActiveAssetId = useEditorStore((s) => s.setActiveAssetId);
   const tool = useEditorStore((s) => s.tool);
-  const [collapsed, setCollapsed] = useState(false);
+
+  const handleTextureSelect = (id: string) => {
+    setActiveAssetId(id);
+    if (tool !== "paint" && tool !== "eyedropper") {
+      useEditorStore.getState().setTool("paint");
+    }
+  };
+
+  const { ceilings, walls, floors } = useMemo(() => {
+    const textures = manifest?.textures ?? [];
+    return {
+      ceilings: textures.filter((t) => t.category === "ceiling"),
+      walls: textures.filter((t) => t.category === "wall"),
+      floors: textures.filter((t) => t.category === "floor"),
+    };
+  }, [manifest]);
 
   if (error) return <div className="p-4 text-red-400 text-sm">{error}</div>;
   if (!manifest)
@@ -77,16 +91,35 @@ export function Catalog() {
   return (
     <div className="w-full h-full flex flex-col min-h-0 overflow-y-auto p-3">
       <CatalogSection
-        title="Textures"
+        title="Ceilings"
         icon={Image}
-        entries={catalog.textures}
+        entries={ceilings}
         selectedId={activeAssetId}
-        onSelect={(id) => {
-          setActiveAssetId(id);
-          if (tool !== "paint" && tool !== "eyedropper")
-            useEditorStore.getState().setTool("paint");
-        }}
+        onSelect={handleTextureSelect}
       />
+
+      <hr className="border-slate-700 my-2" />
+
+      <CatalogSection
+        title="Walls"
+        icon={Image}
+        entries={walls}
+        selectedId={activeAssetId}
+        onSelect={handleTextureSelect}
+      />
+
+      <hr className="border-slate-700 my-2" />
+
+      <CatalogSection
+        title="Floors"
+        icon={Image}
+        entries={floors}
+        selectedId={activeAssetId}
+        onSelect={handleTextureSelect}
+      />
+
+      <hr className="border-slate-700 my-2" />
+
       <CatalogSection
         title="Props"
         icon={Box}
@@ -97,6 +130,9 @@ export function Catalog() {
           useEditorStore.getState().setTool("prop");
         }}
       />
+
+      <hr className="border-slate-700 my-2" />
+
       <CatalogSection
         title="Entities"
         icon={User}
@@ -107,6 +143,9 @@ export function Catalog() {
           useEditorStore.getState().setTool("entity");
         }}
       />
+
+      <hr className="border-slate-700 my-2" />
+
       <CatalogSection
         title="Items"
         icon={Package}
