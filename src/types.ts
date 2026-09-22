@@ -16,6 +16,29 @@ export type SurfaceFace = "floor" | "ceiling" | Direction;
 
 export type MountType = "floor" | "wall" | "ceiling";
 
+export type DamageType =
+  | "slashing"
+  | "piercing"
+  | "bludgeoning"
+  | "fire"
+  | "cold"
+  | "lightning"
+  | "thunder"
+  | "acid"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "necrotic"
+  | "force";
+
+export interface DamageProfile {
+  resistances?: DamageType[];
+  vulnerabilities?: DamageType[];
+  immunities?: DamageType[];
+  /** Maps damage types to their minimum damage threshold values */
+  thresholds?: Partial<Record<DamageType, number>>;
+}
+
 export interface PropData {
   id: string;
   type: string;
@@ -109,6 +132,9 @@ export interface ManifestEntry {
   thickness?: number; // Wall-normal offset for wall attachment
   scale?: [number, number, number]; // Default mesh transformation scale
   properties?: Record<string, unknown>; // catalog default properties
+  damageProfile?: DamageProfile; //what damage types this prop is resistant/vulnerable to
+  health?: number; // how much damage this prop can take before being destroyed
+  isStatic?: boolean; // whether this prop is static (non-movable)
 }
 
 export interface Manifest {

@@ -8,5 +8,26 @@
     "is_lit": true,
     "flicker_speed": 1.2,
     "light_color": "#ffaa44"
-  }
+  },
+  "damageProfile": {
+    "resistances": ["slashing"],
+    "vulnerabilities": ["acid"],
+    "immunities": [
+      "fire",
+      "cold",
+      "lightning",
+      "poison",
+      "psychic",
+      "necrotic",
+      "radiant"
+    ],
+    "thresholds": {
+      "piercing": 15,
+      "bludgeoning": 10,
+      "slashing": 10,
+      "force": 10
+    }
+  },
+  "health": 15,
+  "isStatic": true
 }
