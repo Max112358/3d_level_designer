@@ -305,9 +305,11 @@ export function useSceneInteraction() {
             type: entry?.type ?? "prop",
             cell,
             pos: position,
-            rotation, // Use computed rotation
+            rotation,
             scale: [1, 1, 1],
-            properties: {},
+            properties: {
+              ...(entry?.properties ?? {}),
+            },
           });
         } else if (tool === "item") {
           addItem({
@@ -315,9 +317,11 @@ export function useSceneInteraction() {
             type: entry?.type ?? "prop",
             cell,
             pos: position,
-            rotation, // Use computed rotation
+            rotation,
             scale: [1, 1, 1],
-            properties: {},
+            properties: {
+              ...(entry?.properties ?? {}),
+            },
           });
         } else if (tool === "entity") {
           addEntity({
@@ -325,9 +329,11 @@ export function useSceneInteraction() {
             type: entry?.type ?? "prop",
             cell,
             pos: position,
-            rotation, // Use computed rotation
+            rotation,
             scale: [1, 1, 1],
-            properties: {},
+            properties: {
+              ...(entry?.properties ?? {}),
+            },
           });
         }
       } else if (tool === "light") {

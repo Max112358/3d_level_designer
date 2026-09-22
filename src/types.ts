@@ -108,6 +108,7 @@ export interface ManifestEntry {
   height?: number; // Vertical offset for ceiling attachment
   thickness?: number; // Wall-normal offset for wall attachment
   scale?: [number, number, number]; // Default mesh transformation scale
+  properties?: Record<string, unknown>; // catalog default properties
 }
 
 export interface Manifest {
