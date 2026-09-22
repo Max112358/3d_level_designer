@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useEditorStore } from "./store";
 import { Direction } from "./types";
 
@@ -24,6 +25,16 @@ export function Inspector() {
   const removeAudio = useEditorStore((s) => s.removeAudio);
   const removeTrigger = useEditorStore((s) => s.removeTrigger);
   const setSelection = useEditorStore((s) => s.setSelection);
+
+  // Freeform property "add new" inputs
+  const [newPropKey, setNewPropKey] = useState("");
+  const [newPropValue, setNewPropValue] = useState("");
+
+  // Clear the "add new" inputs whenever the selection changes
+  useEffect(() => {
+    setNewPropKey("");
+    setNewPropValue("");
+  }, [selection]);
 
   if (!selection) {
     return (
@@ -238,6 +249,39 @@ export function Inspector() {
       handleFieldChange(["properties", "difficulties"], updated);
     };
 
+    const updateFreeformProperty = (
+      oldKey: string,
+      newKey: string,
+      newValue: string,
+    ) => {
+      if (!newKey.trim()) return;
+      const copy = JSON.parse(JSON.stringify(data));
+      if (!copy.properties) copy.properties = {};
+      if (oldKey !== newKey) {
+        delete copy.properties[oldKey];
+      }
+      copy.properties[newKey.trim()] = newValue;
+      updateFn!(objectIndex!, copy);
+    };
+
+    const removeFreeformProperty = (key: string) => {
+      const copy = JSON.parse(JSON.stringify(data));
+      if (copy.properties) {
+        delete copy.properties[key];
+      }
+      updateFn!(objectIndex!, copy);
+    };
+
+    const addFreeformProperty = () => {
+      if (!newPropKey.trim()) return;
+      const copy = JSON.parse(JSON.stringify(data));
+      if (!copy.properties) copy.properties = {};
+      copy.properties[newPropKey.trim()] = newPropValue;
+      updateFn!(objectIndex!, copy);
+      setNewPropKey("");
+      setNewPropValue("");
+    };
+
     const renderDynamicInput = (key: string, val: unknown, path: string[]) => {
       // Lock down type and id so they are non-editable
       if (key === "type" || key === "id" || key === "difficulties") return null;
@@ -328,6 +372,11 @@ export function Inspector() {
       return null;
     };
 
+    // Freeform properties (excluding the special "difficulties" key)
+    const freeformEntries = Object.entries(properties).filter(
+      ([key]) => key !== "difficulties",
+    );
+
     return (
       <div className="space-y-4">
         {/* Unity-style Header Block */}
@@ -378,9 +427,89 @@ export function Inspector() {
 
         {/* Auto-Populated Inputs */}
         <div className="space-y-3">
-          {Object.entries(data).map(([key, val]) =>
-            renderDynamicInput(key, val, [key]),
+          {Object.entries(data)
+            .filter(([key]) => key !== "properties")
+            .map(([key, val]) => renderDynamicInput(key, val, [key]))}
+        </div>
+
+        {/* Freeform Properties */}
+        <div className="space-y-2 p-2 bg-slate-800/80 rounded border border-slate-700/60">
+          <label className="block text-xs font-semibold text-slate-300">
+            Freeform Properties
+          </label>
+
+          {freeformEntries.length === 0 ? (
+            <p className="text-[11px] text-slate-500 italic">
+              No custom properties yet.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {freeformEntries.map(([key, val]) => (
+                <div key={key} className="flex gap-1.5 items-center">
+                  <input
+                    type="text"
+                    value={key}
+                    onChange={(e) =>
+                      updateFreeformProperty(
+                        key,
+                        e.target.value,
+                        String(val ?? ""),
+                      )
+                    }
+                    placeholder="key"
+                    className="flex-1 min-w-0 px-2 py-1 rounded bg-slate-900 border border-slate-700 text-white text-xs font-mono"
+                  />
+                  <input
+                    type="text"
+                    value={String(val ?? "")}
+                    onChange={(e) =>
+                      updateFreeformProperty(key, key, e.target.value)
+                    }
+                    placeholder="value"
+                    className="flex-[1.5] min-w-0 px-2 py-1 rounded bg-slate-900 border border-slate-700 text-white text-xs font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFreeformProperty(key)}
+                    className="px-2 py-1 rounded bg-red-900/60 hover:bg-red-700 text-red-200 text-[11px] font-medium"
+                  >
+                    Del
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
+
+          <div className="flex gap-1.5 items-center pt-1 border-t border-slate-700/50">
+            <input
+              type="text"
+              value={newPropKey}
+              onChange={(e) => setNewPropKey(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addFreeformProperty();
+              }}
+              placeholder="New property key..."
+              className="flex-1 min-w-0 px-2 py-1 rounded bg-slate-900 border border-slate-700 text-white text-xs font-mono"
+            />
+            <input
+              type="text"
+              value={newPropValue}
+              onChange={(e) => setNewPropValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addFreeformProperty();
+              }}
+              placeholder="Value..."
+              className="flex-[1.5] min-w-0 px-2 py-1 rounded bg-slate-900 border border-slate-700 text-white text-xs font-mono"
+            />
+            <button
+              type="button"
+              onClick={addFreeformProperty}
+              disabled={!newPropKey.trim()}
+              className="px-2 py-1 rounded bg-sky-700 hover:bg-sky-600 disabled:bg-slate-700 disabled:text-slate-500 text-white text-[11px] font-medium"
+            >
+              Add
+            </button>
+          </div>
         </div>
 
         {onDelete && (
