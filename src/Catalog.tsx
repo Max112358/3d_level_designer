@@ -11,6 +11,37 @@ import { useEditorStore } from "./store";
 import { useManifest, useCatalog } from "./hooks";
 import { ManifestEntry } from "./types";
 
+function TexturePreview({
+  entry,
+  className,
+}: {
+  entry: ManifestEntry;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+
+  if (!entry.path || failed) {
+    return (
+      <div
+        className={`bg-slate-600 flex items-center justify-center text-[10px] ${className}`}
+        title={entry.name}
+      >
+        {entry.id.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={entry.path}
+      alt={entry.name}
+      className={`object-cover ${className}`}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function CatalogSection({
   title,
   icon: Icon,
@@ -49,9 +80,10 @@ function CatalogSection({
               }`}
               title={entry.name}
             >
-              <div className="w-full h-8 rounded mb-1 bg-slate-600 flex items-center justify-center text-[10px]">
-                {entry.id.slice(0, 2).toUpperCase()}
-              </div>
+              <TexturePreview
+                entry={entry}
+                className="w-full h-8 rounded mb-1"
+              />
               {entry.name}
             </button>
           ))}
