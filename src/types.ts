@@ -133,8 +133,6 @@ export interface ManifestEntry {
   thickness?: number; // Wall-normal offset for wall attachment
   scale?: [number, number, number]; // Default mesh transformation scale
   properties?: Record<string, unknown>; // catalog default properties
-  damageProfile?: DamageProfile; //what damage types this prop is resistant/vulnerable to
-  health?: number; // how much damage this prop can take before being destroyed
   isStatic?: boolean; // whether this prop is static (non-movable)
 }
 
