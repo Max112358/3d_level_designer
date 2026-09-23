@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { Viewport } from "./Viewport";
 import { Toolbar } from "./Toolbar";
@@ -8,10 +8,44 @@ import { LayerControls } from "./LayerControls";
 import { Compass } from "./Compass";
 import { LoadingScreen } from "./LoadingScreen";
 import { useManifest } from "./hooks";
+import { useEditorStore } from "./store";
+import { emptyLevel, LevelData } from "./types";
+import {
+  getLastLevelName,
+  getStoredLevel,
+  getStoredLevels,
+  saveStoredLevel,
+} from "./storage";
 
 export default function App() {
   const { loading } = useManifest();
   const [mainCamera, setMainCamera] = useState<THREE.Camera | null>(null);
+
+  const level = useEditorStore((s) => s.level);
+  const loadLevel = useEditorStore((s) => s.loadLevel);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+
+    let saved: LevelData | null = null;
+    const lastName = getLastLevelName();
+    if (lastName) saved = getStoredLevel(lastName);
+
+    if (!saved) {
+      const all = getStoredLevels();
+      if (all.length > 0) saved = all[0].data;
+    }
+
+    if (saved) loadLevel(saved);
+    else loadLevel({ ...emptyLevel(), name: "Untitled" });
+  }, [loadLevel]);
+
+  useEffect(() => {
+    if (!level.name) return;
+    saveStoredLevel(level);
+  }, [level]);
 
   return (
     <div className="relative w-full h-full flex flex-col">

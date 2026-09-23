@@ -111,6 +111,7 @@ export interface AudioData {
 }
 
 export interface LevelData {
+  name?: string;
   version: number;
   cells: Record<string, CellData>;
   props: PropData[];
