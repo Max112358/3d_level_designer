@@ -22,7 +22,7 @@ export function LoadingScreen({ loading }: { loading: boolean }) {
         fading ? "opacity-0" : "opacity-100"
       }`}
     >
-      <div className="text-6xl mb-6 animate-bounce">🏹</div>
+      <div className="text-6xl mb-6 animate-bounce">🗺️</div>
       <h1 className="text-2xl font-bold text-white mb-2">3D Level Editor</h1>
       <p className="text-sm text-slate-400 mb-6">Loading assets...</p>
       <div className="w-48 h-2 bg-slate-800 rounded overflow-hidden">
